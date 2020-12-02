@@ -1,8 +1,66 @@
 
-Last edit: 2020 Dec 2st 4:19 PM, test commit round 2
+Last edit: 2020 Dec 2st 5:34 PM
 
 These java files aim to provide simulation of a DNS client, a DNS server
 and an attacker that aims to cache poisoning the DNS client.
+
+------------- Quick guide to DNS message encoding/ decoding ---------------
+The comments I made before should provide some explanation about different classes,
+as well as how they work together. But for quick catch up, I will leave some introduction
+here as well.
+
+Methods in BigEndianEncoder, BigEndianDecoder are used to encode/decode part of a
+DNS packet. Notice that, java UDP socket sends an array of bytes, and receives an
+array of bytes. So methods in these classes aim to help us convert a string, or a number,
+to some bytes, in big Endian order. Or help us obtain a number, a string(like IP address)
+from part of a byte array.
+
+DNSMessage is the class to represent a DNS message, it has a DNSHeader, a DNSQuestion,
+and three DNSResourceRecords. Each DNSResourceRecords has a list of DNSResourceRecord.
+
+These lists represent Answer, Authority (typically, these are name server info)
+Additional Info field. Defined in rfc 1035.
+
+NOTE: Right now these code can decode a response from an actual DNS server, but it
+cannot encode a similar DNS response packet. In other words, we need to add some
+new methods to it.
+
+
+Where to begin with:
+
+I suggest you use an IDE to build a project, so that you can follow the call trace.
+You can start looking at DNSMessage. The comments should be very helpful.
+
+Also, go to the Simple_Java_Udp.java file, there are some example usages inside the
+main() method.
+-----------------------------------------------------------------------------------
+
+
+------------- Quick guide to Simple UDP client/ server ---------------
+The main() method, as mentioned before, is in Simple_Java_Udp.java
+
+****After you compile the code on floodlight VM, to run as a server. use:
+    "java Simple_Java_Udp server server-host port"
+Where sver-host can be "localhost",
+or ip address like "10.0.0.3" (when running on host h5 under mininet).
+Port is the port number you setup for the sever, like "12345"
+
+Once sever start running, server waits for message from client. After you
+typed something on client's terminal, server should able to receive it.
+
+Now you need to press a key like "c" to continue.
+
+If you type "quit", you can quit the server.
+
+
+****To run as a client. use:
+    "java Simple_Java_Udp client server-host port"
+
+Now if you type something on client's terminal, it should be sent to sever.
+
+If you type "quit", you can quit the client.
+--------------------------------------------------------------------------------
+
 
 // for reference purpose, if needed.
 Some of the code are referenced from Wumian Wang's previous project, which
@@ -31,3 +89,5 @@ TODO: 2. Implement proper encoding methods, for encoding resource record.
 TODO: 3. Add class to represent client, server, attacker.
 
 TODO: (optional) fix bug in makefile (though "make clean" is working)
+// right now, using javac Simple_Java_Udp.java seems working, if all java files
+are in the same directory.

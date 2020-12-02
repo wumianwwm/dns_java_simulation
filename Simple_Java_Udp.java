@@ -15,7 +15,7 @@
 *
 *  If time allows, fix out how to write a workable Makefile. */
 
-// 2020 Dec 2nd, test commit 
+// 2020 Dec 2nd, test commit
 
 import java.io.IOException;
 import java.net.*;
@@ -219,6 +219,27 @@ public class Simple_Java_Udp {
                 System.out.println("t2 id: " + t2.getClass_id());
                 System.out.println("t2 quatity: " + t2.getClass_quatity());
                 System.out.println("t2 random: " + t2.getNumberfromTestAddClass2());
+                System.exit(0);
+            }
+
+            // Some examples here.
+            if (args[0].equalsIgnoreCase("example")){
+                RecordType typeA = RecordType.A;
+                DNSMessage sampleMsg = new DNSMessage("www.example.com",
+                        new Random(), typeA);
+                // to encode a DNS messgae -- with DNSHeader, DNSQuestion, no other stuff (so far)
+                sampleMsg.encode(sampleMsg.getEncoder());
+
+                // how to get bytes array from DNS message, after you encode it.
+                byte[] bytesBuffer = sampleMsg.tobytesBuffer();
+
+
+                // now we see how to decode a message.
+                // first, lets assume bytesBuffer contains data recevied from a DNS sever.
+                BigEndianDecoder decoder = new BigEndianDecoder(bytesBuffer);
+                // this is how to decode the bytes buffer and generate a DNS message.
+                DNSMessage receivedMessage = new DNSMessage(decoder);
+
                 System.exit(0);
             }
         }

@@ -1,3 +1,5 @@
+// Class for testing javac and Makefile.
+
 import java.util.*;
 
 public class TestAddClass2 {

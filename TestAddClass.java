@@ -1,4 +1,4 @@
-//package Simple_DNS_Simulation;
+//Class for testing javac and makefile.
 
 import java.util.*;
 
