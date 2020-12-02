@@ -4,6 +4,7 @@
 # Build a mininet topology with 3 hosts, 5 switches, and a remote floodlight controller.
 # Links have bandwidth 15Mbps, latency 1ms, packet loss 1%
 # These parameters might be adjusted based on further experiment settings.
+# Also notice that, some links (e.g. h1-s1 do not have packet loss so far)
 
 from mininet.net import Mininet
 from mininet.node import Controller, RemoteController, OVSController
