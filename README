@@ -1,0 +1,33 @@
+
+Last edit: 2020 Dec 1st 10:23 PM
+
+These java files aim to provide simulation of a DNS client, a DNS server
+and an attacker that aims to cache poisoning the DNS client.
+
+// for reference purpose, if needed.
+Some of the code are referenced from Wumian Wang's previous project, which
+built a simple DNS resolver that can encode a DNS packet, send to a DNS server,
+receive DNS response message and decode it.
+
+Here we acknowledge that method for encoding a DNS message, and decoding
+a DNS response message, are adapted from the previous work.
+
+For simplicity, DNScache, DNSnode, ResourceRecord, and methods for actual
+DNS lookup with real DNS servers, are (plan) not to be used in the
+research project.
+
+We will add functions that allow us to create a DNS response message,
+similar to those created by actual DNS servers.
+
+We will add classes and functions to represent different role: client, server,
+and attacker.
+// --------------------------------
+
+TODO: 1. Add another constructor for DNSMessage, DNSHeader, and so on.
+TODO:   This is to fit the requirement for encoding a DNS response message.
+
+TODO: 2. Implement proper encoding methods, for encoding resource record.
+
+TODO: 3. Add class to represent client, server, attacker.
+
+TODO: (optional) fix bug in makefile (though "make clean" is working)
