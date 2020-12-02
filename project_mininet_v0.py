@@ -1,8 +1,9 @@
 #!/usr/bin/python
 
-# Python script for CS9657 Assignment 5:
-# Build a mininet topology with 8 hosts, 14 switches, and a remote floodlight controller.
+# Python script for a simulated network:
+# Build a mininet topology with 3 hosts, 5 switches, and a remote floodlight controller.
 # Links have bandwidth 15Mbps, latency 1ms, packet loss 1%
+# These parameters might be adjusted based on further experiment settings.
 
 from mininet.net import Mininet
 from mininet.node import Controller, RemoteController, OVSController
