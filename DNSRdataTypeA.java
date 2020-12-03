@@ -21,4 +21,12 @@ public class DNSRdataTypeA extends DNSRdata
         // return the parsed Ipv4 address
         return this.parsedIp;
     }
+
+    @Override
+    /** Implementing the interface:
+     * @param encoderV: the BigEndianEncoder inside DNSMessage object. */
+    public void encode(BigEndianEncoder encoderV)
+    {
+        // TODO: think about how to encode it?
+    }
 }

@@ -26,4 +26,14 @@ public class DNSRdataTypeNullSkippable extends DNSRdata
 
         return "----";
     }
+
+
+    @Override
+    /** Implementing the interface:
+     * @param encoderV: the BigEndianEncoder inside DNSMessage object. */
+    public void encode(BigEndianEncoder encoderV)
+    {
+        // Note: No need for implementation for this class.
+        // Our simulation will use Type A resource record only.
+    }
 }

@@ -3,7 +3,7 @@
  * Because different types of DNSResourceRecords have deferent Rdata format,
  * all its subclasses are corresponds to a specific type's Rdata.
  */
-public abstract class DNSRdata
+public abstract class DNSRdata implements Encodable
 {
 
     // a field represent a domain name

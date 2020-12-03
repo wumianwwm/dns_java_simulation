@@ -18,4 +18,13 @@ public class DNSRdataTypeNS extends DNSRdata
         // return the NSDNAME parsed which stored in an DNSName object
         return this.dnsName.getName();
     }
+
+    @Override
+    /** Implementing the interface:
+     * @param encoderV: the BigEndianEncoder inside DNSMessage object. */
+    public void encode(BigEndianEncoder encoderV)
+    {
+        // Note: No need for implementation for this class.
+        // Our simulation will use Type A resource record only.
+    }
 }

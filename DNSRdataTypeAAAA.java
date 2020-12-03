@@ -14,4 +14,13 @@ public class DNSRdataTypeAAAA extends DNSRdata
     public String getInfo() {
         return this.parsedIp;
     }
+
+    @Override
+    /** Implementing the interface:
+     * @param encoderV: the BigEndianEncoder inside DNSMessage object. */
+    public void encode(BigEndianEncoder encoderV)
+    {
+        // Note: No need for implementation for this class.
+        // Our simulation will use Type A resource record only.
+    }
 }

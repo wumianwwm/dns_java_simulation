@@ -25,11 +25,21 @@ public class DNSRdataTypeSOA extends DNSRdata {
         decoder.skip(20);
     }
 
-    // TODO
+
     @Override
     public String getInfo()
     {
-        //
+        // stub
         return "----";
+    }
+
+
+    @Override
+    /** Implementing the interface:
+     * @param encoderV: the BigEndianEncoder inside DNSMessage object. */
+    public void encode(BigEndianEncoder encoderV)
+    {
+        // Note: No need for implementation for this class.
+        // Our simulation will use Type A resource record only.
     }
 }
