@@ -119,6 +119,16 @@ public class DNSMessage implements Encodable
     }
 
 
+    /** Helper method:
+     * get domain name in dns question
+     * @return the domain name's string */
+    public String getQueryName()
+    {
+
+        return this.dnsQuestion.getDomainNameInQuestion();
+    }
+
+
     /**
      * Helper method:
      * check if the response if from the authoritative server

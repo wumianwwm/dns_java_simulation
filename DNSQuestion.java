@@ -41,6 +41,15 @@ public class DNSQuestion implements Encodable
         this.qClass = decoder.decodeShort();
     }
 
+
+    /** Helper method: get the domain name within the question field
+     * @return : a string that represents the domain name */
+    public String getDomainNameInQuestion()
+    {
+
+        return this.domainName.getName();
+    }
+
     @Override
     public void encode(BigEndianEncoder encoderV)
     {
