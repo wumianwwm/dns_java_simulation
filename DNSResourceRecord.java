@@ -14,7 +14,7 @@
  *  Different types of DNS Resource Records have different structure of rdata.
  *  Therefore the DNSRdata is an abstract data type.
  */
-public class DNSResourceRecord
+public class DNSResourceRecord implements Encodable
 {
     // NAME field
     private DNSName dnsName;
@@ -51,6 +51,15 @@ public class DNSResourceRecord
 
     }
 
+
+    @Override
+    /** Implementing the interface:
+     * @param encoderV: the BigEndianEncoder inside DNSMessage object. */
+    public void encode(BigEndianEncoder encoderV)
+    {
+        // TODO: think about how to encode it?
+        // we possibly need a new constructor for encoding purpose.
+    }
 
     /**
      * Adapter method:

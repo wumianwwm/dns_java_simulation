@@ -7,7 +7,7 @@ import java.util.List;
  * in Answer, Authority or Additional section of the response DNSMessage
  * from a server.
  */
-public class DNSResourceRecords implements Iterable<DNSResourceRecord>
+public class DNSResourceRecords implements Iterable<DNSResourceRecord>, Encodable
 {
     private List<DNSResourceRecord> records;
     // this field is used for counting the number of
@@ -61,5 +61,17 @@ public class DNSResourceRecords implements Iterable<DNSResourceRecord>
     public Iterator<DNSResourceRecord> iterator()
     {
         return this.records.iterator();
+    }
+
+
+    @Override
+    /** Implementing the interface:
+     * @param encoderV: the BigEndianEncoder inside DNSMessage object. */
+    public void encode(BigEndianEncoder encoderV)
+    {
+        // TODO: think about how to encode it?
+        // we need to call encode every resource record.
+        // possibly, we need some consturctor for encoding purpose.
+        // Or we need a addElement() method to add DNSRresourceRecord to list.
     }
 }
