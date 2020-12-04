@@ -29,6 +29,15 @@ public class DNSRdataTypeNullSkippable extends DNSRdata
 
 
     @Override
+    /** implement the abstract method. */
+    public int getDataLength()
+    {
+        //for research project, no need for implementation here.
+        return 0;
+    }
+
+
+    @Override
     /** Implementing the interface:
      * @param encoderV: the BigEndianEncoder inside DNSMessage object. */
     public void encode(BigEndianEncoder encoderV)

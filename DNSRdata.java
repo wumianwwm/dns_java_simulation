@@ -117,4 +117,10 @@ public abstract class DNSRdata implements Encodable
     // For type NS, CNAME, MX: this should return name;
     public abstract String getInfo();
 
+    /** Abstract method: get the length of DNSrdata.
+     * Since different types of RR have differnet rdata format,
+     * each subclasses of DNSRdata need to implement this method,
+     * based on their rdata format and size. */
+    public abstract int getDataLength();
+
 }
