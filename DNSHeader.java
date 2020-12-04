@@ -39,6 +39,31 @@ public class DNSHeader implements Encodable
     }
 
 
+    /** Constructor for DNS server to encode a DNSHeader.
+     *  Since the server needs to add resource records to the message,
+     *  answer, nameServer, additionalFullRR, might not be zero.
+     *  @param queryId - id of this dns response, should be same as query.
+     *  @param headerFlag - flag in the DNS header, just leave as 0 for this project.
+     *  @param questions - number of questions in Question section.
+     *  @param answers - number of RRs in Answer section.
+     *  @param nameServers - number of RRs in Name Server section.
+     *  @param additions - number of RRs in Additional Info section.
+     *
+     *  Note: for this project, the server should send back a DNS response,
+     *  with headerFlage be 0x0000; question 1; answer 1;
+     *  no name server, or additional info needed. */
+    public DNSHeader(short queryId, short headerFlag, short questions,
+                     short answers, short nameServers, short additions)
+    {
+        this.id = queryId;
+        this.flag = headerFlag;
+        this.questionCount = questions;
+        this.answerCount = answers;
+        this.nameServerCount = nameServers;
+        this.additionalFullRRCount = additions;
+    }
+
+
     /**
      * Constructor for decoding purpose:
      * decode the response's data and thus construct a DNSHeader object for a DNSMessage object.

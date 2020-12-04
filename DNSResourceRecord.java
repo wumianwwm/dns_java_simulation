@@ -34,6 +34,25 @@ public class DNSResourceRecord implements Encodable
     // but from the short value type.
     private RecordType recordType;
 
+    /** Constructor for encoding purpose.
+     * Create a DNSResourceRecord object, based on given info.*/
+    public DNSResourceRecord (String rname, RecordType type,
+                              short rrclass, int TTL, String dataStr)
+    {
+        // TODO: check
+        // For our project, our server will not use name compression.
+        this.dnsName = new DNSLabels(rname);
+        this.type = (short)type.getCode();
+        this.RRclass = rrclass;
+        this.TTL = TTL;
+        // use factory method in DNSRdata to create an instance.
+        this.rdata = DNSRdata.createInstance(this.type, dataStr);
+        // TODO: we need some ways to update rdLength
+    }
+
+
+    /** Constructor for decoding purpose.
+     *  @param decoder: the BigEndianDecoder to decode a DNSResourceRecord. */
     public DNSResourceRecord (BigEndianDecoder decoder)
     {
         // The factory mode build a DNSName

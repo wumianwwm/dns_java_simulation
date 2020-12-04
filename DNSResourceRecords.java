@@ -14,6 +14,19 @@ public class DNSResourceRecords implements Iterable<DNSResourceRecord>, Encodabl
     // DNSResourceRecord that should be decoded
     private int recordCount;
 
+    /** Constructor for encoding purpose.
+     * this constructor will only initialize the list.
+     * We will use other method to add DNSResourceRecord,
+     *  one-by-one, to the list. */
+    public DNSResourceRecords()
+    {
+        this.records = new ArrayList<>();
+        // this variable isn't useful for encoding, since we know
+        // how many records will be inside each list.
+        // Just update it so that it has the correct value.
+        this.recordCount = 0;
+    }
+
     /**
      * Constructor:
      * @param decoder: The BigEndianDecoder from DNSMessage's constructor's argument.
@@ -34,6 +47,17 @@ public class DNSResourceRecords implements Iterable<DNSResourceRecord>, Encodabl
         }
 
     }
+
+    /** Helper method to add one DNSResourceRecord into the list.
+     * The function will also update the recordCount.
+     * @param
+     * resourceRecord: the object to be added into the list. */
+    public void addOneRecord(DNSResourceRecord resourceRecord)
+    {
+        this.records.add(resourceRecord);
+        this.recordCount = this.records.size();
+    }
+
 
 
     /**

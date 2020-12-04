@@ -12,7 +12,37 @@ public abstract class DNSRdata implements Encodable
     // could be ipv4 or ipv6
     protected String parsedIp;
 
-    // Factory method:
+    /** Factory method for encoding purpose:
+     * Based on TYPE filed in ResourceRecord,
+     * create appropriate DNSRdata
+     * @param
+     *  r - represents the type of resource record this Rdata belongs to.
+     *  dataStr - data for DNSRdata, in String format
+     *      Different type of Resource Record has different rdata format.
+     *      So for now we use a String to serve as raw data buffer.
+     *
+     *      The subclass can use information in dataStr, to encode proper
+     *      rdata based on format defined in RFC 1034.
+     *
+     *      For typeA, rdata should be a Ipv4 address.
+     *      like "129.100.0.79" */
+    public static DNSRdata createInstance(short r, String dataStr)
+    {
+        switch (r)
+        {
+            // supported type
+            // For this project, we only support encode a TypeA Rdata.
+            case 1:
+                return new DNSRdataTypeA(dataStr);
+
+            default:
+                return null;
+        }
+
+    }
+
+
+    // Factory method for decoding purpose:
     // Based on the TYPE field in ResourceRecord,
     // generate appropriate DNSRdata.
     public static DNSRdata decode(BigEndianDecoder decoder, short r, short rdLengthV)
