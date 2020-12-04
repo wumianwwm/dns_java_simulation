@@ -115,6 +115,18 @@ public class BigEndianEncoder
     }
 
 
+    /** Basic encoding method: Encodes an IPv4 address
+     * For research project, this method is used for encoding
+     * Type A Resource Record's rdata.
+     * @param ipv4Addr - a string that looks like "129.100.0.79" */
+    public void encodeIpv4(String ipv4Addr)
+    {
+
+        // TODO: implement this method.
+    }
+
+
+
     /**
      * Helper method:
      * when the encoding of a DNS query is completed,
