@@ -93,9 +93,18 @@ public class DNSResourceRecords implements Iterable<DNSResourceRecord>, Encodabl
      * @param encoderV: the BigEndianEncoder inside DNSMessage object. */
     public void encode(BigEndianEncoder encoderV)
     {
-        // TODO: think about how to encode it?
-        // we need to call encode every resource record.
-        // possibly, we need some consturctor for encoding purpose.
-        // Or we need a addElement() method to add DNSRresourceRecord to list.
+        // first check if there is any Resource Record in the lis.
+        if (this.recordCount == 0)
+        {
+            // list is empty, just returns.
+            return;
+        }
+
+        for (DNSResourceRecord record : this.records)
+        {
+            // TODO: check
+            // let each resource record encode itself.
+            record.encode(encoderV);
+        }
     }
 }

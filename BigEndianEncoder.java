@@ -75,6 +75,24 @@ public class BigEndianEncoder
     }
 
 
+    /** Basic encoding method:
+     * Encode a 32-bit integer, in big-endian format.
+     * Lets's say the int has value 0x10203040
+     * in buffer it will be [... 0x10, 0x20, 0x30, 0x40, ...]
+     * @param i: the 32-bit intger to be encoded. */
+    public void encodeInt(int i)
+    {
+        // higherShort is 0x1020
+        short higherShort = (short) (i >> 16);
+        // lowerShort is 0x3040
+        short lowerShort = (short) i;
+        // Now we first encode the higherShort's two bytes
+        //  then we encode the lower two bytes.
+        this.encodeShort(higherShort);
+        this.encodeShort(lowerShort);
+    }
+
+
     /**
      * Basic encoding method:
      * Encodes a string which represents a domain name.
@@ -124,8 +142,8 @@ public class BigEndianEncoder
     {
         // if any error occurs, encode 0.0.0.0 as IPv4 address
 
-        // a 2 byte short variable that help us encode 0.0.0.0
-        short wrongData = 0;
+        // a 4 byte short variable that help us encode 0.0.0.0
+        int wrongData = 0;
         // firsr we split the string by "."
         String[] splittedStr = ipv4Addr.split("\\.+");
         // debug purpose. The length of splittedStr should be 4.
@@ -133,8 +151,7 @@ public class BigEndianEncoder
         {
             System.out.println("encodeIPv4: incorrect split string length. ");
             // Encode two short variable.
-            this.encodeShort(wrongData);
-            this.encodeShort(wrongData);
+            this.encodeInt(wrongData);
             return;
         }
 
@@ -152,8 +169,7 @@ public class BigEndianEncoder
             {
                 System.out.println("encodeIPv4: can't convert string to number");
                 // encode 2 short variables with value 0, and returns.
-                this.encodeShort(wrongData);
-                this.encodeShort(wrongData);
+                this.encodeInt(wrongData);
                 return;
             }
         }
