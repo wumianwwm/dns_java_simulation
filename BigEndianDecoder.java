@@ -220,6 +220,7 @@ public class BigEndianDecoder
 
         for (int i = 0; i < 3; i++)
         {
+            // Use & operation with integer to remove sign of byte.
             builder.append(theFourBytes[i] & 0xFF);
             builder.append('.');
         }

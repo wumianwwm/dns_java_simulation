@@ -116,13 +116,51 @@ public class BigEndianEncoder
 
 
     /** Basic encoding method: Encodes an IPv4 address
+     * IPv4 address in a DNS rdata, is a 32-bit(4 bytes) integer.
      * For research project, this method is used for encoding
      * Type A Resource Record's rdata.
      * @param ipv4Addr - a string that looks like "129.100.0.79" */
-    public void encodeIpv4(String ipv4Addr)
+    public void encodeIPv4(String ipv4Addr)
     {
+        // if any error occurs, encode 0.0.0.0 as IPv4 address
 
-        // TODO: implement this method.
+        // a 2 byte short variable that help us encode 0.0.0.0
+        short wrongData = 0;
+        // firsr we split the string by "."
+        String[] splittedStr = ipv4Addr.split("\\.+");
+        // debug purpose. The length of splittedStr should be 4.
+        if (splittedStr.length != 4)
+        {
+            System.out.println("encodeIPv4: incorrect split string length. ");
+            // Encode two short variable.
+            this.encodeShort(wrongData);
+            this.encodeShort(wrongData);
+            return;
+        }
+
+        int byteBalue; // use it for get integer value from a sub string
+        // Use a for loop, to convert each string to a
+        byte[] bytesArray = new byte[4]; // a 4-bytes array for our data
+        for (int i = 0; i < splittedStr.length; i++)
+        {
+            try
+            {
+                byteBalue = Integer.parseInt(splittedStr[i]);
+                // if no error, add the byte value to bytesBuffer.
+                bytesArray[i] = (byte) byteBalue;
+            }catch (NumberFormatException n)
+            {
+                System.out.println("encodeIPv4: can't convert string to number");
+                // encode 2 short variables with value 0, and returns.
+                this.encodeShort(wrongData);
+                this.encodeShort(wrongData);
+                return;
+            }
+        }
+
+        // Now we left the loop, no exception was caught.
+        // Encode the array of bytes.
+        this.encodeBytes(bytesArray);
     }
 
 
