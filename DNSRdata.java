@@ -121,6 +121,6 @@ public abstract class DNSRdata implements Encodable
      * Since different types of RR have differnet rdata format,
      * each subclasses of DNSRdata need to implement this method,
      * based on their rdata format and size. */
-    public abstract int getDataLength();
+    public abstract short getDataLength();
 
 }

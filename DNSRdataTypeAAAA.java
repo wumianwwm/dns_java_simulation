@@ -18,7 +18,7 @@ public class DNSRdataTypeAAAA extends DNSRdata
 
     @Override
     /** implement the abstract method. */
-    public int getDataLength()
+    public short getDataLength()
     {
         //for research project, no need for implementation here.
         return 0;

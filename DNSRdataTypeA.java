@@ -39,7 +39,7 @@ public class DNSRdataTypeA extends DNSRdata
 
     @Override
     /** implement the abstract method. */
-    public int getDataLength()
+    public short getDataLength()
     {
         // TODO: implement this method.
         return 0;
