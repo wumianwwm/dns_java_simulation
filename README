@@ -42,7 +42,7 @@ The main() method, as mentioned before, is in Simple_Java_Udp.java
 ****After you compile the code on floodlight VM, to run as a server. use:
     "java Simple_Java_Udp server server-host port"
 Where sver-host can be "localhost",
-or ip address like "10.0.0.3" (when running on host h5 under mininet).
+or ip address like "10.0.0.3" (when running on host h3 under mininet).
 Port is the port number you setup for the sever, like "12345"
 
 Once sever start running, server waits for message from client. After you
