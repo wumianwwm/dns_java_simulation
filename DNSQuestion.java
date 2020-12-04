@@ -29,6 +29,18 @@ public class DNSQuestion implements Encodable
     }
 
 
+    /** Constructor for encoding a DNS response's DNS question.
+     * @param domainName - domain name in the question.
+     * @param  queryType - type of the query
+     * @param queryClass - class of the query */
+    public DNSQuestion(String domainName, short queryType, short queryClass)
+    {
+        this.domainName = new DNSLabels(domainName);
+        this.qType = queryType;
+        this.qClass = queryClass;
+    }
+
+
     /**
      * Constructor for decoding purpose:
      * docode a DNSQuestion object from the received dns response message.
@@ -48,6 +60,23 @@ public class DNSQuestion implements Encodable
     {
 
         return this.domainName.getName();
+    }
+
+
+    /** Helper method: get the query type.
+     * @return: the qType */
+    public short getqType()
+    {
+
+        return this.qType;
+    }
+
+    /** Helper method: get the query class
+     * @return: the qClass */
+    public short getqClass()
+    {
+
+        return this.qClass;
     }
 
     @Override

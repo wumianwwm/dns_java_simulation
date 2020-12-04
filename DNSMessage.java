@@ -71,6 +71,53 @@ public class DNSMessage implements Encodable
     }
 
 
+    /** Constructor version 3:
+     * Constructs a DNS response packets, which will be used by server and attacker.
+     *
+     * The basic logic is: the server/attacker has received the client's query packet.
+     * The server/client do some work, to handle the query.
+     * During the handling process, server/attacker creates resource records for
+     *  each one of the Answer, Authority(nameSevers), Additional Info, section.
+     *
+     * a new flag will also be generated. Indicate any errors, and the packet is a
+     * response packet. (See RFC1034, page 26, section 4.1.1)
+     *
+     * @param dnsQuery - the query sent from a DNS client
+     * @param newFlag - the new flag used for DNSHeader.
+     * @param answers - list of resource records in Answer section.
+     * @param nameSevers - list of resource records in Name Severs(Authority) section.
+     * @param additionalRecords - list of resource records in additional information.
+     * */
+    public DNSMessage (DNSMessage dnsQuery,
+                       short newFlag,
+                       DNSResourceRecords answers,
+                       DNSResourceRecords nameSevers,
+                       DNSResourceRecords additionalRecords)
+    {
+        // TODO: implement this constructor.
+    }
+
+
+
+    /** Helper method:
+     * Use the dnsQuestion object to create a new DNSQuestion.
+     * This method will be used when we want to construct a DNS response
+     * message, corresponding to a DNS query.
+     * @return: a new DNSQuestion object  or NULL */
+    public DNSQuestion copyToNewQuestion()
+    {
+        if (this.dnsQuestion == null)
+        {
+            System.out.println("DNSMessage: question is null!");
+            return null;
+        }
+
+        String domainName = this.dnsQuestion.getDomainNameInQuestion();
+        short queryType = this.dnsQuestion.getqType();
+        short queryClass = this.dnsQuestion.getqClass();
+        return new DNSQuestion(domainName, queryType, queryClass);
+    }
+
     /**
      * Helper method:
      * get the answer count from dnsHeader
