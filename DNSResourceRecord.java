@@ -47,8 +47,10 @@ public class DNSResourceRecord implements Encodable
         this.TTL = TTL;
         // use factory method in DNSRdata to create an instance.
         this.rdata = DNSRdata.createInstance(this.type, dataStr);
-        // TODO: check
-        this.rdLength = this.rdata.getDataLength();
+        // for the length of rdata, we don't know yet...
+        // Because we haven't encode the rdata,
+        //  in some cases, we don't know how many bytes we will encode.
+        this.rdLength = -1; // as a warning. rdata has not been encoded.
     }
 
 
@@ -89,6 +91,8 @@ public class DNSResourceRecord implements Encodable
 
         // now we need to call rdata's encoding method:
         this.rdata.encode(encoderV);
+        // We also need to update the rdata's length
+        this.rdLength= this.rdata.getDataLength();
     }
 
     /**
