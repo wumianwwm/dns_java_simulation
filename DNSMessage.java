@@ -315,9 +315,15 @@ public class DNSMessage implements Encodable
      */
     public void encode(BigEndianEncoder encoderV)
     {
-
+        // update: now we need to encode the three sections as well.
         this.dnsHeader.encode(encoderV);
         this.dnsQuestion.encode(encoderV);
+        // the implementation in DNSResourceRecords will
+        // ensure that, if list is empty, it will not
+        // encode anything, just return.
+        this.dnsAnswers.encode(encoderV);
+        this.dnsNameServers.encode(encoderV);
+        this.dnsAdditionalRecords.encode(encoderV);
     }
 
 
