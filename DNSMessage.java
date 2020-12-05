@@ -146,22 +146,13 @@ public class DNSMessage implements Encodable
                                           short nsCount,
                                           short additionCount)
     {
-        short queryId = query.getIdFromHeader();
+        short queryId = (short) query.getQueryId();
         // question count
         short qCount = query.getQuestionCountFromHeader();
         return new DNSHeader(queryId, newFlag, qCount,
                 answerCount, nsCount, additionCount);
     }
 
-
-    /** Helper method:
-     * Get Id field in DNSHeader of this message.
-     * @return id in DNSHeader. */
-    public short getIdFromHeader()
-    {
-
-        return this.dnsHeader.getHeaderId();
-    }
 
     /** Helper method:
      * get questionCount field in DNSHeader of this message.

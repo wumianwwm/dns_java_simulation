@@ -81,15 +81,6 @@ public class DNSHeader implements Encodable
 
     }
 
-
-    /** Helper method:
-     * @return the id of this DNSHeader. */
-    public short getHeaderId()
-    {
-
-        return this.id;
-    }
-
     /** Helper method:
      * @return the questionCount of this DNSHeader. */
     public short getQuestionCount()
@@ -171,16 +162,6 @@ public class DNSHeader implements Encodable
         return (this.id & 0xFFFF);
     }
 
-
-    /** Helper method:
-     * get the query Id, in short data type.
-     * This function will be used for encoding a DNS response packet.
-     * @return thid.id, in short data type */
-    public short getQueryIdInShort()
-    {
-
-        return this.id;
-    }
 
     @Override
     public void encode(BigEndianEncoder encoderV)
