@@ -163,6 +163,21 @@ public class DNSHeader implements Encodable
     }
 
 
+    /** Helper method:
+     * print this dns header. */
+    public void printDNSHeader()
+    {
+        System.out.println("Header id: " + this.id
+                + " flag: " + String.format("0x%04X", this.flag));
+        System.out.println("question#: " + this.questionCount
+                + " answer#: " + this.answerCount);
+        System.out.println("authority#: " + this.nameServerCount
+        + " addition#: " + this.additionalFullRRCount);
+        System.out.println(" "); // leave a blank line.
+
+    }
+
+
     @Override
     public void encode(BigEndianEncoder encoderV)
     {

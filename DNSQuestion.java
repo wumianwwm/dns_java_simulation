@@ -79,6 +79,18 @@ public class DNSQuestion implements Encodable
         return this.qClass;
     }
 
+
+    /** Helper method:
+     * print the question. */
+    public void printDNSQuestion()
+    {
+        System.out.println("query domain name: "
+                + this.domainName.getName());
+        System.out.println("type: " + String.format("0x%04X", this.qType)
+        + " class: " + String.format("0x%04X", this.qClass));
+        System.out.println(" "); // leave a blank line.
+    }
+
     @Override
     public void encode(BigEndianEncoder encoderV)
     {

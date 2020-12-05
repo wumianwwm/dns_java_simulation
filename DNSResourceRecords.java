@@ -69,6 +69,23 @@ public class DNSResourceRecords implements Iterable<DNSResourceRecord>, Encodabl
     }
 
 
+    /** Helper method:
+     * print every resource record in the list. */
+    public void printResourceRecords()
+    {
+        if (this.recordCount == 0)
+        {
+            System.out.println("    No resource records are found.");
+            return; // list is empty, just return.
+        }
+
+        for (DNSResourceRecord r : this.records)
+        {
+            r.printResourceRecord();
+        }
+        // when all RRs are printed, leave a blank line at the end.
+        System.out.println(" ");
+    }
 
     /**
      * Adapter method:

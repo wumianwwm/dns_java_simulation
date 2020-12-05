@@ -74,6 +74,19 @@ public class DNSResourceRecord implements Encodable
     }
 
 
+    /** Helper method:
+     * to print this resource record. */
+    public void printResourceRecord()
+    {
+        System.out.println(this.dnsName.getName() + " "
+        + String.format("0x%04X", this.recordType) + " "
+        + String.format("0x%04X", this.RRclass) + " "
+        + this.TTL + " "
+        + this.rdLength + " "
+        + this.rdata.getInfo());
+    }
+
+
     @Override
     /** Implementing the interface:
      * @param encoderV: the BigEndianEncoder inside DNSMessage object. */

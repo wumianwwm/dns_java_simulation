@@ -295,6 +295,26 @@ public class DNSMessage implements Encodable
 //    }
 
 
+    /** Helper method:
+     * print the whole DNS message */
+    public void printDNSMessage()
+    {
+        System.out.println("Header Section:");
+        this.dnsHeader.printDNSHeader();
+
+        System.out.println("Question Section:");
+        this.dnsQuestion.printDNSQuestion();
+
+        System.out.println("Answer Section:");
+        this.dnsAnswers.printResourceRecords();
+
+        System.out.println("Authority Section:");
+        this.dnsNameServers.printResourceRecords();
+
+        System.out.println("Additional Section:");
+        this.dnsAdditionalRecords.printResourceRecords();
+    }
+
     /**
      * Helper method:
      * get the encoder for passing as an arugment
