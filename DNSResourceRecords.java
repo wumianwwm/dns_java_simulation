@@ -58,6 +58,16 @@ public class DNSResourceRecords implements Iterable<DNSResourceRecord>, Encodabl
         this.recordCount = this.records.size();
     }
 
+    /** Helper method:
+     * This function is helpful when we try to encode a DNS response message.
+     * For DNSHeader, we need to include the RR count in each section.
+     * @return number of RR in the list records. */
+    public short getRRCount()
+    {
+        // recordCount should be updated every time we add element to list.
+        return (short) this.recordCount;
+    }
+
 
 
     /**

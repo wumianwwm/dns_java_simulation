@@ -82,6 +82,22 @@ public class DNSHeader implements Encodable
     }
 
 
+    /** Helper method:
+     * @return the id of this DNSHeader. */
+    public short getHeaderId()
+    {
+
+        return this.id;
+    }
+
+    /** Helper method:
+     * @return the questionCount of this DNSHeader. */
+    public short getQuestionCount()
+    {
+
+        return this.questionCount;
+    }
+
     /**
      * Helper method:
      * @return: number of answers in the DNS response message.

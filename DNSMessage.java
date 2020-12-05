@@ -94,7 +94,20 @@ public class DNSMessage implements Encodable
                        DNSResourceRecords nameSevers,
                        DNSResourceRecords additionalRecords)
     {
-        // TODO: implement this constructor.
+        // TODO: check, first we copy the old question from query.
+        this.dnsQuestion = dnsQuery.copyToNewQuestion();
+        // now we update the three RRs
+        this.dnsAnswers = answers;
+        this.dnsNameServers = nameSevers;
+        this.dnsAdditionalRecords = additionalRecords;
+        // now we extract counts.
+        short numOfAnswer = this.dnsAnswers.getRRCount();
+        short numOfNS = this.dnsNameServers.getRRCount();
+        short numOfAddtions = this.dnsAdditionalRecords.getRRCount();
+
+        // now we can create a new DNS Header
+        this.dnsHeader = newHeaderforResponse(dnsQuery, newFlag,
+                numOfAnswer, numOfNS, numOfAddtions);
     }
 
 
@@ -116,6 +129,47 @@ public class DNSMessage implements Encodable
         short queryType = this.dnsQuestion.getqType();
         short queryClass = this.dnsQuestion.getqClass();
         return new DNSQuestion(domainName, queryType, queryClass);
+    }
+
+
+    /** Helper method:
+     * Create a new DNSHeader as a DNS response to a DNS query message.
+     * @param query: the DNSMessage received from a client.
+     * @param newFlag: new flags to be set in new Header.
+     * @param answerCount: number of RR(Resource Record)s in answer section.
+     * @param nsCount: number of RRs in authority section.
+     * @param additionCount: number of RRs in additional section.
+     * @return a new DNSHeader object*/
+    public DNSHeader newHeaderforResponse(DNSMessage query,
+                                          short newFlag,
+                                          short answerCount,
+                                          short nsCount,
+                                          short additionCount)
+    {
+        short queryId = query.getIdFromHeader();
+        // question count
+        short qCount = query.getQuestionCountFromHeader();
+        return new DNSHeader(queryId, newFlag, qCount,
+                answerCount, nsCount, additionCount);
+    }
+
+
+    /** Helper method:
+     * Get Id field in DNSHeader of this message.
+     * @return id in DNSHeader. */
+    public short getIdFromHeader()
+    {
+
+        return this.dnsHeader.getHeaderId();
+    }
+
+    /** Helper method:
+     * get questionCount field in DNSHeader of this message.
+     * @return questionCount in DNSHeader. */
+    public short getQuestionCountFromHeader()
+    {
+
+        return this.dnsHeader.getQuestionCount();
     }
 
     /**
