@@ -1,5 +1,5 @@
 
-Last edit: 2020 Dec 2st 5:34 PM
+Last edit: 2020 Dec 6th 1:34 PM
 
 These java files aim to provide simulation of a DNS client, a DNS server
 and an attacker that aims to cache poisoning the DNS client.
@@ -21,10 +21,24 @@ and three DNSResourceRecords. Each DNSResourceRecords has a list of DNSResourceR
 These lists represent Answer, Authority (typically, these are name server info)
 Additional Info field. Defined in rfc 1035.
 
-NOTE: Right now these code can decode a response from an actual DNS server, but it
-cannot encode a similar DNS response packet. In other words, we need to add some
-new methods to it.
+Each resource record(here the class is DNSResourceRecord) has 5 fields:
+name: a DNSName object, contains info of a domain name like "www.uwo.ca";
+type: type of the resource record, our project will only use type A,
+        which stands for an IPv4 address in rdata.
+class: this field is not important for our project.
+rdLength: length of rdata. For type A, length will be 4 bytes.
+rdata: for type A resource record, this is a 4-byte integer,
+        represents an IPv4 address.
 
+NOTE: Right now, the code can encode a DNS query (a DNS Message with a header,
+    a question, but no answers, authorities, or additional info).
+The code can build a DNS response message based on the query. You can add more
+    than one type A resource record to any one of the answers,
+    authorities(name servers), or additional section.
+    DO NOT USE OTHER RECORD TYPE.
+
+In Simple_java_Udp, check testEncodeDecode() method. That
+    method provides some examples about how to use the methods.
 
 Where to begin with:
 
@@ -32,7 +46,7 @@ I suggest you use an IDE to build a project, so that you can follow the call tra
 You can start looking at DNSMessage. The comments should be very helpful.
 
 Also, go to the Simple_Java_Udp.java file, there are some example usages inside the
-main() method.
+main() method and testEncodeDecode..
 -----------------------------------------------------------------------------------
 
 
@@ -59,6 +73,10 @@ If you type "quit", you can quit the server.
 Now if you type something on client's terminal, it should be sent to sever.
 
 If you type "quit", you can quit the client.
+
+NOTE: These cannot be used for our project directly, these are just for
+    testing, to see if we can run java program that sends/receive UDP packets
+    under mininet hosts' terminals.
 --------------------------------------------------------------------------------
 
 
@@ -80,14 +98,10 @@ similar to those created by actual DNS servers.
 We will add classes and functions to represent different role: client, server,
 and attacker.
 // --------------------------------
+two possible to-do:
+TODO: we need to implement a DNS server, a DNS client, and possibly,
+        a DNS attacker.
 
-TODO: 1. Add another constructor for DNSMessage, DNSHeader, and so on.
-TODO:   This is to fit the requirement for encoding a DNS response message.
-
-TODO: 2. Implement proper encoding methods, for encoding resource record.
-
-TODO: 3. Add class to represent client, server, attacker.
-
-TODO: (optional) fix bug in makefile (though "make clean" is working)
+TODO: we need to implement DFP algorithm in the DNS client.
 // right now, using javac Simple_Java_Udp.java seems working, if all java files
 are in the same directory.
