@@ -213,7 +213,7 @@ public class Simple_Java_Udp {
         String queryName = query.getQueryName();
 
         // we create elements needed for a response packet.
-        short reponseHeaderFlag = 0x1234;
+        short reponseHeaderFlag = (short) 0xf801;
         DNSResourceRecords answers = new DNSResourceRecords();
         DNSResourceRecords authorities = new DNSResourceRecords();
         DNSResourceRecords additional = new DNSResourceRecords();
