@@ -167,7 +167,9 @@ public class DNSHeader implements Encodable
      * print this dns header. */
     public void printDNSHeader()
     {
-        System.out.println("Header id: " + this.id
+        // id should be unsigned
+        int idInInt = (this.id & 0xffff);
+        System.out.println("Header id: " + idInInt
                 + " flag: " + String.format("0x%04X", this.flag));
         System.out.println("question#: " + this.questionCount
                 + " answer#: " + this.answerCount);

@@ -201,12 +201,70 @@ public class Simple_Java_Udp {
         cmdScanner.close(); // close scanner
     }
 
+    /** For testing purpose. */
+    public static void testEncodeDecode(String domainName)
+    {
+        Random random = new Random();
+        // Way to encode a dns query message, will used by a client.
+        // Now we assume this is the packet we decoded, source from a client.
+        DNSMessage query = new DNSMessage(domainName, random, RecordType.A);
+        int queryId = query.getQueryId(); // will be used for testing purpose.
+        // will be used later on for encoding an answer.
+        String queryName = query.getQueryName();
+
+        // we create elements needed for a response packet.
+        short reponseHeaderFlag = 0x1234;
+        DNSResourceRecords answers = new DNSResourceRecords();
+        DNSResourceRecords authorities = new DNSResourceRecords();
+        DNSResourceRecords additional = new DNSResourceRecords();
+
+
+        DNSResourceRecord oneAnswer = new DNSResourceRecord(queryName, RecordType.A,
+                (short)0x0c, 3615, "129.0.255.128");
+        DNSResourceRecord oneAuthority = new DNSResourceRecord(queryName, RecordType.A,
+                (short)0x5678, 3600, "1.2.3.4");
+        DNSResourceRecord oneAdditional = new DNSResourceRecord(queryName, RecordType.A,
+                (short)0x0010, 1800, "5.6.7.8");
+
+        // add resource record to their belonging lists.
+        answers.addOneRecord(oneAnswer);
+        authorities.addOneRecord(oneAuthority);
+        additional.addOneRecord(oneAdditional);
+
+        DNSMessage responseToQuery = new DNSMessage(query,reponseHeaderFlag,
+                answers, authorities, additional);
+        // how we encode a message.
+        responseToQuery.encode(responseToQuery.getEncoder());
+        // how we turn it to bytes buffer.
+        byte[] responseBuffer = responseToQuery.tobytesBuffer();
+
+        // we now assume the responseBytesBuffer is what client received.
+        // Note: one decoder to one response packet.
+        BigEndianDecoder decodeDNSResponse = new BigEndianDecoder(responseBuffer);
+        // This is how we create a DNS message, using
+        //  a decoder.
+        DNSMessage fromServer = new DNSMessage(decodeDNSResponse);
+
+        if (fromServer.getQueryId() != queryId)
+        {
+            System.out.println("error! query id unmatched!");
+        }
+
+        fromServer.printDNSMessage();
+
+    }
 
     public static void main(String[] args) {
 
         Simple_Java_Udp udpPlay = new Simple_Java_Udp();
 
         System.out.println("Hello World!");
+
+        if (args.length == 0)
+        {
+            Simple_Java_Udp.testEncodeDecode("www.uwo.ca");
+            System.exit(0);
+        }
 
         // test package usage
         if (args.length == 1){

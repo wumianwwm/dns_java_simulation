@@ -120,7 +120,11 @@ public abstract class DNSRdata implements Encodable
     /** Abstract method: get the length of DNSrdata, in number of bytes.
      * Since different types of RR have differnet rdata format,
      * each subclasses of DNSRdata need to implement this method,
-     * based on their rdata format and size. */
+     * based on their rdata format and size.
+     *
+     * Note: this method needs to be called before encoding rdata!
+     * Since in Resource Record, the data length is encoded before
+     * the rdata is actually encoded. */
     public abstract short getDataLength();
 
 }

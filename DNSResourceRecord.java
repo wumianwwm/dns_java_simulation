@@ -47,10 +47,16 @@ public class DNSResourceRecord implements Encodable
         this.TTL = TTL;
         // use factory method in DNSRdata to create an instance.
         this.rdata = DNSRdata.createInstance(this.type, dataStr);
-        // for the length of rdata, we don't know yet...
-        // Because we haven't encode the rdata,
-        //  in some cases, we don't know how many bytes we will encode.
-        this.rdLength = -1; // as a warning. rdata has not been encoded.
+        // for the length of rdata, we need to know it even before
+        //  we encode the rdata.
+        if (this.rdata == null)
+        {
+            // as a safe guard.
+            System.out.println("DNSResourceRecord: warning, rdata is null!");
+            this.rdLength = 0;
+            return;
+        }
+        this.rdLength = this.rdata.getDataLength();
     }
 
 
@@ -79,7 +85,7 @@ public class DNSResourceRecord implements Encodable
     public void printResourceRecord()
     {
         System.out.println(this.dnsName.getName() + " "
-        + String.format("0x%04X", this.recordType) + " "
+        + String.format("0x%04X", this.type) + " "
         + String.format("0x%04X", this.RRclass) + " "
         + this.TTL + " "
         + this.rdLength + " "
@@ -102,10 +108,11 @@ public class DNSResourceRecord implements Encodable
         encoderV.encodeShort(this.RRclass);
         encoderV.encodeInt(this.TTL);
 
+        // now we need to encode the data length
+        // Note: rdLength must be known before encoding rdata.
+        encoderV.encodeShort(this.rdLength);
         // now we need to call rdata's encoding method:
         this.rdata.encode(encoderV);
-        // We also need to update the rdata's length
-        this.rdLength= this.rdata.getDataLength();
     }
 
     /**

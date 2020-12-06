@@ -44,6 +44,11 @@ public class DNSMessage implements Encodable
         int queryId = randomV.nextInt(65536);
         this.dnsHeader = new DNSHeader((short) queryId);
         this.dnsQuestion = new DNSQuestion(domainNameV, r);
+
+        // initialize the lists
+        this.dnsAnswers = new DNSResourceRecords();
+        this.dnsNameServers = new DNSResourceRecords();
+        this.dnsAdditionalRecords = new DNSResourceRecords();
     }
 
 
@@ -94,7 +99,9 @@ public class DNSMessage implements Encodable
                        DNSResourceRecords nameSevers,
                        DNSResourceRecords additionalRecords)
     {
-        // TODO: check, first we copy the old question from query.
+        // TODO: check, first we should create an encoder.
+        this.encoder = new BigEndianEncoder();
+        // get question from query
         this.dnsQuestion = dnsQuery.copyToNewQuestion();
         // now we update the three RRs
         this.dnsAnswers = answers;
