@@ -66,13 +66,13 @@ public class Simple_DNS_Server
 
     /** Helper method:
      * create InetAddress based on server_IP.
-     * If error occur, set server_addr to null. */
+     * If error occurs, set server_addr to null. */
     private void getInetAddress(String server_IP)
     {
         try {
             this.server_addr = InetAddress.getByName(server_IP);
         }catch (UnknownHostException u) {
-            System.out.println("Simpple_DNS_Sever: "
+            System.out.println("Simple_DNS_Sever: "
             + "server IP address is unknown.");
             this.server_addr = null;
         }
