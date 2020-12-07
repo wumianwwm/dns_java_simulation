@@ -1,5 +1,5 @@
 
-Last edit: 2020 Dec 6th 1:34 PM
+Last edit: 2020 Dec 7th 9:16 AM
 
 These java files aim to provide simulation of a DNS client, a DNS server
 and an attacker that aims to cache poisoning the DNS client.
@@ -99,8 +99,11 @@ We will add classes and functions to represent different role: client, server,
 and attacker.
 // --------------------------------
 two possible to-do:
-TODO: we need to implement a DNS server, a DNS client, and possibly,
-        a DNS attacker.
+TODO:
+we have implemented a DNS Server, testing may needed.
+But we still need a client that implements DFP, and an attacker.
+
+The attacker can use the server code. So adjustment may needed.
 
 TODO: we need to implement DFP algorithm in the DNS client.
 // right now, using javac Simple_Java_Udp.java seems working, if all java files
