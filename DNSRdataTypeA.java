@@ -41,7 +41,6 @@ public class DNSRdataTypeA extends DNSRdata
     /** implement the abstract method. */
     public short getDataLength()
     {
-        // TODO: check
         // Even if the encoding encounters some error,
         // an IP address of 0.0.0.0 will be encoded.
         // Thus, the length of rdata will always be 4.
@@ -53,7 +52,7 @@ public class DNSRdataTypeA extends DNSRdata
      * @param encoderV: the BigEndianEncoder inside DNSMessage object. */
     public void encode(BigEndianEncoder encoderV)
     {
-        // TODO: check, though variable name is parsedIp, it is actually Ip we passed in constructor.
+        // though name is parsedIp, it's actually Ip(dataStr) in constructor.
         encoderV.encodeIPv4(this.parsedIp);
     }
 }

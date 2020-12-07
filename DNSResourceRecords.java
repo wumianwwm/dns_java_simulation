@@ -129,7 +129,6 @@ public class DNSResourceRecords implements Iterable<DNSResourceRecord>, Encodabl
 
         for (DNSResourceRecord record : this.records)
         {
-            // TODO: check
             // let each resource record encode itself.
             record.encode(encoderV);
         }

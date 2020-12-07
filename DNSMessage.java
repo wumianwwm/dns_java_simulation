@@ -227,6 +227,22 @@ public class DNSMessage implements Encodable
         return this.dnsQuestion.getDomainNameInQuestion();
     }
 
+    /** Helper method:
+     * get question type in dns question.*/
+    public short getQType()
+    {
+
+        return this.dnsQuestion.getqType();
+    }
+
+    /** Helper method:
+     * get question class in dns question. */
+    public short getQClass()
+    {
+
+        return this.dnsQuestion.getqClass();
+    }
+
 
     /**
      * Helper method:

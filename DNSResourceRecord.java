@@ -98,7 +98,6 @@ public class DNSResourceRecord implements Encodable
      * @param encoderV: the BigEndianEncoder inside DNSMessage object. */
     public void encode(BigEndianEncoder encoderV)
     {
-        // TODO: check
         // I am not sure the encode() in DNSName is safe to use
         // So just use the old method...
         String questionName = this.dnsName.getName();
