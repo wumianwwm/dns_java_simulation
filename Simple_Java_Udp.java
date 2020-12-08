@@ -204,6 +204,9 @@ public class Simple_Java_Udp {
     /** For testing purpose. */
     public static void testEncodeDecode(String domainName)
     {
+        // Test java get current time method.
+        long milliSec = System.currentTimeMillis();
+
         Random random = new Random();
         // Way to encode a dns query message, will used by a client.
         // Now we assume this is the packet we decoded, source from a client.
@@ -251,6 +254,18 @@ public class Simple_Java_Udp {
         }
 
         fromServer.printDNSMessage();
+
+        // Test java sleep and get current time.
+        try {
+            Thread.sleep(150);
+        }catch (InterruptedException i)
+        {
+            System.out.println(i.getMessage());
+        }
+        long milliSec2 = System.currentTimeMillis();
+        System.out.println("milliSec: " + milliSec);
+        System.out.println("milliSec2: " + milliSec2);
+        System.out.println("difference: " + (milliSec2 - milliSec));
 
     }
 
