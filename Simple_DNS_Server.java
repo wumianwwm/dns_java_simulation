@@ -20,12 +20,28 @@ public class Simple_DNS_Server
     // the pre-set IP address towards a query.
     //  e.g. 192.168.56.4
     private String answer_IP;
+
+    // isSeverMode: true stands for sever; false stands for attacker.
+    // Attacker, is kind of a "server": it receives/passively noticed a
+    //  DNS query from a client.
+    // Then attacker generates a response, and send it back to client.
+    // Difference between server and attacker are :
+    //  1. the answer_IP should be different;
+    //  2. the strategy for sending packets might be
+    //      slightly different.
+    private boolean isSeverMode;
     // the flag to be set at response header
     //  e.g. 0x1234
     private short headerFlag;
     /** Constructor:
      * Take an IP address and a Port, both in string format,
-     * to create a Simple_DNS_Server object.*/
+     *  to create a Simple_DNS_Server object.
+     * By default, the Simple_DNS_Server is in server mode.
+     * @param server_IP  IP address for the server.
+     * @param portStr port value for sever's socket to bind.
+     * @param answer_IP the pre-set answer(IPv4) address to client's query
+     *                      domain name.
+     * @param headerFlag 2-byte short value that will be set in DNSHeader. */
     public Simple_DNS_Server(String server_IP, String portStr,
                              String answer_IP, short headerFlag)
     {
@@ -33,9 +49,10 @@ public class Simple_DNS_Server
         getPortNumber(portStr);
         getInetAddress(server_IP);
         createSocket();
-        // set the answer_IP, and headerFlag
+        // set the answer_IP, headerFlag, and isSeverMode
         this.answer_IP = answer_IP;
         this.headerFlag = headerFlag;
+        this.isSeverMode = true;
     }
 
     /** Helper method:
@@ -152,6 +169,47 @@ public class Simple_DNS_Server
                 clientAddr, clientPort);
     }
 
+    /** Helper method for sending DNS response
+     * Based on whether the object is server or attacker,
+     *  may use different sending strategies.
+     *  @param sendPacket: packet to be sent to client. */
+    private void sendMessage(DatagramPacket sendPacket)
+    {
+        if (this.isSeverMode)
+        {
+            // send packet in server mode.
+            this.sendMessageInSeverMode(sendPacket);
+            return;
+        }
+        // mode is not server. Send using attacker mode.
+        this.sendMessageInAttackerMode(sendPacket);
+    }
+
+    /** Helper method for sending DNS response in server mode.
+     * @param sendPacket: packet to be sent to client. */
+    private void sendMessageInSeverMode(DatagramPacket sendPacket)
+    {
+        // TODO: how do we implement it based on experiment setup?
+        // Sometimes, the sever's packet may arrive earlier than
+        //  attacker's packet.
+
+    }
+
+    /** Helper method for sending DNS response in attacker mode.
+     * @param sendPacket: packet to be sent to client.*/
+    private void sendMessageInAttackerMode(DatagramPacket sendPacket)
+    {
+        // TODO: how do we implement it based on experiment setup?
+
+    }
+
+    /** Helper method:
+     * Change the mode from server to attacker. */
+    public void changeModeToAttacker()
+    {
+
+        this.isSeverMode = false;
+    }
 
     /** Running the server program:
      * Waits for a query from a DNS client, then encodes
@@ -182,8 +240,8 @@ public class Simple_DNS_Server
                 // encode the response and send it back to server.
                 DatagramPacket sendPacket = this.createSendPacket(response,
                         recvPacket);
-                // now we try to send the packet
-                this.socket.send(sendPacket);
+                // now we try to send the packet using helper method.
+                this.sendMessage(sendPacket);
             }catch (SocketTimeoutException s)
             {
                 // no error, client timed out, leave the loop.
