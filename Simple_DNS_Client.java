@@ -99,7 +99,15 @@ public class Simple_DNS_Client {
      *          if numQuery <= 1, client will send one query. */
     public void running_client(String baseName, int numQuery)
     {
-        //
+        String[] splitBaseName = this.splitBaseName(baseName);
+
+        for (int i = 0; i < numQuery; i++)
+        {
+            String queryName = this.createDomainName(splitBaseName,
+                    i);
+            // send and receive dns message, version 1
+            this.sendAndRecv_v1(queryName);
+        }
     }
 
     /** Helper method for processing base domain name.
@@ -180,5 +188,27 @@ public class Simple_DNS_Client {
             builder.append(splitStr[1]);
         }
         return builder.toString();
+    }
+
+
+    /** Send and receive message -- version 1.
+     * create one query, send to sever, receive response
+     * from server.
+     * Test: calculate RTT, send and receive.
+     * ******** No DFP involves ********
+     * @param queryName Domain name we want to query. */
+    private void sendAndRecv_v1(String queryName)
+    {
+        //
+    }
+
+    /** Helper method: create a Datagram Packet, which
+     *      will be sent to server/attacker.
+     *  @param queryName domain name in query.
+     *  @return a Datagram Packet ready to be sent. */
+    private DatagramPacket createSendPacket(String queryName)
+    {
+
+        return null;
     }
 }

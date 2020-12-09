@@ -51,6 +51,20 @@ public class DNSMessage implements Encodable
         this.dnsAdditionalRecords = new DNSResourceRecords();
     }
 
+    /** Constructor version 1 - altered:
+     * @param domainName the domain name we wish to query for.
+     * @param id transaction id for the query(0-65535).
+     * @param r  should be A for research project. */
+    public DNSMessage(String domainName, int id, RecordType r)
+    {
+        this.encoder = new BigEndianEncoder();
+        this.dnsHeader = new DNSHeader((short)id);
+        this.dnsQuestion = new DNSQuestion(domainName, r);
+        // initialize lists
+        this.dnsAnswers = new DNSResourceRecords();
+        this.dnsNameServers = new DNSResourceRecords();
+        this.dnsAdditionalRecords = new DNSResourceRecords();
+    }
 
     /**
      * Constructor version 2:
