@@ -318,14 +318,32 @@ public class Simple_Java_Udp {
         }
 
 
+        if ((args.length == 5) &&
+        args[0].equalsIgnoreCase("dnsClient"))
+        {
+            // args[1]: server IP address
+            // args[2]: server Port
+            // args[3]: attacker's IP address
+            // args[4]: attacker's Port
+            Simple_DNS_Client client = new Simple_DNS_Client(args[1],
+                    args[2], args[3], args[4]);
+            client.running_client("www.uwo.ca", 5);
+            System.exit(0);
+        }
+
         if (args.length != 3) {
             System.out.println("Wrong usage");
             System.out.println("Correct usage: mode ip port");
             System.exit(0);
         }
 
-        if (args[0].equalsIgnoreCase("server")) {
-            // run server mode
+        if (args[0].equalsIgnoreCase("dnsServer")) {
+            // run dns server
+            Simple_DNS_Server server = new Simple_DNS_Server(args[1],
+                    args[2], "192.127.100.200", (short) 0x1234);
+            server.running_server();
+        }
+        else if (args[0].equalsIgnoreCase("server")){
             udpPlay.udp_echo_server(args[1], args[2]);
         }
         else if (args[0].equalsIgnoreCase("client")) {

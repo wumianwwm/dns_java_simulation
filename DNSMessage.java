@@ -258,6 +258,20 @@ public class DNSMessage implements Encodable
     }
 
 
+    /** Retrieve all answers from dnsAnswers,
+     * get IP address of the query domain name.
+     * @param qName domain name of query.
+     * @param qType record type query looks for.
+     * @return an array of IPv4 address of the domain
+     *  name, in String format. */
+    public String[] retrieveDNSAnswers(String qName, RecordType qType)
+    {
+
+        // retrieve rdata (e.g. IPv4 address) in DNS answer section.
+        return this.dnsAnswers.getIPsOfName(qName, qType);
+    }
+
+
     /**
      * Helper method:
      * check if the response if from the authoritative server

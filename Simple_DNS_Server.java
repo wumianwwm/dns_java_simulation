@@ -236,6 +236,7 @@ public class Simple_DNS_Server
         // bytes buffer for creating the packet.
         byte[] recvBuffer = new byte[1024];
         int bufferLength = recvBuffer.length;
+        System.out.println("DNS server: start running.");
         while (true)
         {
             // set all bytes to 0. TODO: check
@@ -255,6 +256,7 @@ public class Simple_DNS_Server
             }catch (SocketTimeoutException s)
             {
                 // no error, client timed out, leave the loop.
+                System.out.println("Socket time out, prepare to leave");
                 break;
             }catch (IOException i)
             {
@@ -264,6 +266,8 @@ public class Simple_DNS_Server
             }
         }
 
+        // close socket, and that's the end of program.
+        this.socket.close();
     }
 
 }

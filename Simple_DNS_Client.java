@@ -1,9 +1,12 @@
+import java.io.IOException;
 import java.net.*;
+import java.util.Random;
 
 public class Simple_DNS_Client {
 
     // variables use to create socket, and send/receive DNS query.
     private DatagramSocket socket; // used for sending/receiving UDP packets
+    private Random random; // used for generating random query ID.
     private InetAddress server_addr; // IP address of server
     private int server_port; // port of server waits for connection.
 
@@ -22,6 +25,7 @@ public class Simple_DNS_Client {
             System.out.println("Simple_DNS_Client: socket error.");
             this.socket = null;
         }
+        this.random = new Random();
     }
 
 
@@ -99,6 +103,7 @@ public class Simple_DNS_Client {
      *          if numQuery <= 1, client will send one query. */
     public void running_client(String baseName, int numQuery)
     {
+        System.out.println("DNS Client: start running.");
         String[] splitBaseName = this.splitBaseName(baseName);
 
         for (int i = 0; i < numQuery; i++)
@@ -108,6 +113,8 @@ public class Simple_DNS_Client {
             // send and receive dns message, version 1
             this.sendAndRecv_v0(queryName);
         }
+        // close the socket
+        this.socket.close();
     }
 
     /** Helper method for processing base domain name.
@@ -191,24 +198,81 @@ public class Simple_DNS_Client {
     }
 
 
-    /** Send and receive message -- version 1.
-     * create one query, send to sever, receive response
+    /** Send and receive message -- version 0.
+     * create one query, send only to sever, receive response
      * from server.
      * Test: calculate RTT, send and receive.
      * ******** No DFP involves ********
      * @param queryName Domain name we want to query. */
     private void sendAndRecv_v0(String queryName)
     {
-        //
+        if (this.socket == null)
+        {
+            return; // we can't send nor receive packets.
+        }
+
+        DatagramPacket queryPacket = this.createSendPacket(queryName,
+                this.server_addr, this.server_port);
+        try
+        {
+            this.socket.send(queryPacket);
+            // record send time
+            long sendTime = System.currentTimeMillis();
+
+            // prepare to receive packet
+            byte[] recvBuffer = new byte[1024];
+            DatagramPacket recvPacket = new DatagramPacket(recvBuffer, recvBuffer.length);
+            this.socket.receive(recvPacket);
+            // record receive time
+            long recvTime = System.currentTimeMillis();
+            int rtt = (int) (recvTime - sendTime);
+
+            // decode response.
+            byte[] responseBuffer = recvPacket.getData();
+            BigEndianDecoder decoder = new BigEndianDecoder(responseBuffer);
+            DNSMessage responseMsg = new DNSMessage(decoder);
+
+            // retrieve information.
+            int qID = responseMsg.getQueryId();
+            String qName = responseMsg.getQueryName();
+            RecordType qType = RecordType.getByCode(
+                    responseMsg.getQType());
+            String[] IPs = responseMsg.retrieveDNSAnswers(qName, qType);
+
+            // print results.
+            System.out.println(qID + " " + qName + " "
+            + qType);
+            for (int i = 0; i < IPs.length; i++)
+            {
+                System.out.print(IPs[i]);
+                System.out.print(" ");
+            }
+            System.out.println(" RTT: " + rtt);
+            System.out.println(" ");
+
+        }catch (IOException i)
+        {
+            //
+        }
     }
 
     /** Helper method: create a Datagram Packet, which
      *      will be sent to server/attacker.
      *  @param queryName domain name in query.
+     *  @param dstAddress destination address of the packet.
+     *  @param destPort destination port of the packet.
      *  @return a Datagram Packet ready to be sent. */
-    private DatagramPacket createSendPacket(String queryName)
+    private DatagramPacket createSendPacket(String queryName, InetAddress dstAddress,
+                                            int destPort)
     {
+        // if needed, we will adjust this method, so that all
+        //  query have different query ID.
+        int randomId = this.random.nextInt(65535);
+        DNSMessage queryMsg = new DNSMessage(queryName, randomId, RecordType.A);
+        queryMsg.encode(queryMsg.getEncoder());
+        byte[] queryData = queryMsg.tobytesBuffer();
 
-        return null;
+        return new DatagramPacket(queryData, queryData.length,
+                dstAddress, destPort);
     }
 }

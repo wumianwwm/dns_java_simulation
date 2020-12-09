@@ -43,6 +43,7 @@ public class DNSResourceRecord implements Encodable
         // For our project, our server will not use name compression.
         this.dnsName = new DNSLabels(rname);
         this.type = (short)type.getCode();
+        this.recordType = RecordType.getByCode(this.type & 0xFFFF);
         this.RRclass = rrclass;
         this.TTL = TTL;
         // use factory method in DNSRdata to create an instance.
@@ -79,6 +80,29 @@ public class DNSResourceRecord implements Encodable
 
     }
 
+
+    /** Helper method:
+     * get Domain Name from resource record. */
+    public String getDomainName()
+    {
+
+        return this.dnsName.getName();
+    }
+
+    /** Helper method:
+     * get record type from resource record. */
+    public RecordType getRecordType()
+    {
+
+        return this.recordType;
+    }
+    /** Helper method: get rdata information
+     *  For research project, we mainly want IPv4 address. */
+    public String getRdataInfo()
+    {
+
+        return this.rdata.getInfo();
+    }
 
     /** Helper method:
      * to print this resource record. */

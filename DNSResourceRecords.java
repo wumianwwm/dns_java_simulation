@@ -70,6 +70,39 @@ public class DNSResourceRecords implements Iterable<DNSResourceRecord>, Encodabl
 
 
     /** Helper method:
+     * loop through all the resource record, if any one
+     *  contains an IP address of the domain name we are
+     *  asking for, put it a list.
+     * @param qName domain name query looks for
+     * @param qtype record type query looks for*/
+    public String[] getIPsOfName(String qName, RecordType qtype)
+    {
+        List<String> stringList = new ArrayList<>();
+        for (DNSResourceRecord record : this.records)
+        {
+            String domainName = record.getDomainName();
+            RecordType rType = record.getRecordType();
+            if (domainName.equals(qName) &&
+                    (rType.getCode() == qtype.getCode()))
+            {
+                // record type and domain name matche,
+                // rdata should be an IPv4 address.
+                String expectedData = record.getRdataInfo();
+                stringList.add(expectedData);
+            }
+        }
+
+        int count = stringList.size();
+        String[] strings = new String[count];
+        for (int i = 0; i < count; i++)
+        {
+            strings[i] = stringList.get(i);
+        }
+
+        return strings;
+    }
+
+    /** Helper method:
      * print every resource record in the list. */
     public void printResourceRecords()
     {
