@@ -193,6 +193,16 @@ public class Simple_DNS_Server
         // Sometimes, the sever's packet may arrive earlier than
         //  attacker's packet.
 
+        // 2020-Dec-09-4:04PM:
+        // simple version, just send data
+        try
+        {
+            this.socket.send(sendPacket);
+        }catch (IOException i)
+        {
+            System.out.println(i.getMessage());
+        }
+
     }
 
     /** Helper method for sending DNS response in attacker mode.

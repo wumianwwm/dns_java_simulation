@@ -106,7 +106,7 @@ public class Simple_DNS_Client {
             String queryName = this.createDomainName(splitBaseName,
                     i);
             // send and receive dns message, version 1
-            this.sendAndRecv_v1(queryName);
+            this.sendAndRecv_v0(queryName);
         }
     }
 
@@ -197,7 +197,7 @@ public class Simple_DNS_Client {
      * Test: calculate RTT, send and receive.
      * ******** No DFP involves ********
      * @param queryName Domain name we want to query. */
-    private void sendAndRecv_v1(String queryName)
+    private void sendAndRecv_v0(String queryName)
     {
         //
     }
