@@ -269,6 +269,72 @@ public class Simple_Java_Udp {
 
     }
 
+    /** For testing purpose.
+     * Test if we can adjust the socket timeout dynamically.
+     * @param count - how many times we want to experiment.
+     *
+     * Experiment result: (with count=10)
+     * (difference: time after and before socket.receive().)
+     * timeout value: 39; difference: 45
+     * timeout value: 55; difference: 57
+     * timeout value: 40; difference: 40
+     * timeout value: 92; difference: 92
+     * timeout value: 48; difference: 49
+     * timeout value: 70; difference: 72
+     * timeout value: 37; difference: 37
+     * timeout value: 90; difference: 90
+     * timeout value: 86; difference: 88
+     * timeout value: 87; difference: 88 */
+    public static void testSocketTimeOut(int count)
+    {
+        DatagramSocket socket = null;
+        try {
+            socket = new DatagramSocket(12345);
+        }catch (SocketException s)
+        {
+            return;
+        }
+        byte[] buffer = new byte[1024];
+        DatagramPacket packet = new DatagramPacket(buffer,
+                buffer.length);
+
+        // now we test setSocketTimeout
+        Random random = new Random();
+        int timeOut;
+        // setSoTimeout might get an error.
+        //  We need to initialize it here.
+        long beforeRecv = 0;
+        long afterRecv;
+        long timeDifference;
+
+        for (int i = 0; i < count; i++)
+        {
+            // ensure timeOut will be greater than 0, <= 100 ms.
+            timeOut = 1 + random.nextInt(100);
+            try {
+                socket.setSoTimeout(timeOut);
+                beforeRecv = System.currentTimeMillis();
+                socket.receive(packet);
+            }catch (SocketTimeoutException s)
+            {
+                afterRecv = System.currentTimeMillis();
+                timeDifference= afterRecv - beforeRecv;
+                System.out.println("timeout value: " + timeOut
+                + "; " + "difference: " + timeDifference);
+            }catch (SocketException s)
+            {
+                System.out.println("Socket exception!");
+                System.out.println(s.getMessage());
+                break;
+            }catch (IOException io)
+            {
+                System.out.println("IO exception!");
+                System.out.println(io.getMessage());
+                break;
+            }
+        }
+    }
+
     public static void main(String[] args) {
 
         Simple_Java_Udp udpPlay = new Simple_Java_Udp();
@@ -277,7 +343,8 @@ public class Simple_Java_Udp {
 
         if (args.length == 0)
         {
-            Simple_Java_Udp.testEncodeDecode("www.uwo.ca");
+//            Simple_Java_Udp.testEncodeDecode("www.uwo.ca");
+            Simple_Java_Udp.testSocketTimeOut(10);
             System.exit(0);
         }
 
