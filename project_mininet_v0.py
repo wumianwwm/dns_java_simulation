@@ -73,11 +73,13 @@ def myNetwork():
     net.addLink(h1, s1, bw=15, delay='1ms')
     net.addLink(h2, s2, bw=15, delay='1ms')
     net.addLink(h3, s5, bw=15, delay='1ms')
-    # links between swithces will have 10ms delay, 1% packet loss
-    net.addLink(s1, s2, bw=15, delay='10ms', loss=1)
-    net.addLink(s2, s3, bw=15, delay='10ms', loss=1)
-    net.addLink(s3, s4, bw=15, delay='10ms', loss=1)
-    net.addLink(s4, s5, bw=15, delay='10ms', loss=1)
+    # links between switches will have 10ms delay, no packet loss
+    # Packet loss will be taken in consideration if requires in
+    #   future experiments.
+    net.addLink(s1, s2, bw=15, delay='10ms')
+    net.addLink(s2, s3, bw=15, delay='10ms')
+    net.addLink(s3, s4, bw=15, delay='10ms')
+    net.addLink(s4, s5, bw=15, delay='10ms')
     
     info( '*** Starting network\n')
     net.build()
