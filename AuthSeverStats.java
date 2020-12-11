@@ -77,6 +77,44 @@ public class AuthSeverStats {
                 + this.beta * absValue;
     }
 
+    /** Get the time client should waits for another response..
+     * For too early packet, wait time calculation is same as mentioned
+     *  in DFP paper.
+     * Even if packet is not too early, we will still wait full window time.
+     * @param rtt Round Trip Time of the first response packet */
+    public int getFullWindowTime(int rtt)
+    {
+        if (this.estimatedRTT == 0)
+        {
+            // wait another RTT.
+            return rtt;
+        }
+
+        // update devRTT to use.
+        double absValue = Math.abs(rtt - this.estimatedRTT);
+        double finalDevRTT = 0; // the final DevRTT we gonna use.
+        if (this.devRTT == 0)
+        {
+            // We calculate a temporary devRTT value.
+            finalDevRTT = this.beta * absValue;
+        }
+        if (this.devRTT != 0)
+        {
+            finalDevRTT = this.devRTT;
+        }
+
+        // calculate wait time.
+        int windowStartTime = (int) (this.estimatedRTT -
+                finalDevRTT * this.factorWindow);
+        if (rtt < windowStartTime)
+        {
+            // for too early packet.
+            return (int)(absValue + finalDevRTT * this.factorWindow);
+        }
+        // for not too early packet
+        return (int) (finalDevRTT * this.factorWindow);
+    }
+
 
 
 }
