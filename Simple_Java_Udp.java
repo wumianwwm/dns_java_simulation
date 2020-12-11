@@ -404,13 +404,25 @@ public class Simple_Java_Udp {
             System.exit(0);
         }
 
-        if (args[0].equalsIgnoreCase("dnsServer")) {
+        if (args[0].equalsIgnoreCase("dnsServer"))
+        {
             // run dns server
             Simple_DNS_Server server = new Simple_DNS_Server(args[1],
-                    args[2], "192.127.100.200", (short) 0x1234);
+                    args[2], "192.127.112.31", (short) 0x1234);
             server.running_server();
+            System.exit(0);
         }
-        else if (args[0].equalsIgnoreCase("server")){
+
+        if (args[0].equalsIgnoreCase("dnsAttacker"))
+        {
+            Simple_DNS_Server attacker = new Simple_DNS_Server(args[1],
+                    args[2], "101.102.201.202", (short)0x0100);
+            attacker.changeModeToAttacker();
+            attacker.running_server();
+            System.exit(0);
+        }
+
+        if (args[0].equalsIgnoreCase("server")){
             udpPlay.udp_echo_server(args[1], args[2]);
         }
         else if (args[0].equalsIgnoreCase("client")) {

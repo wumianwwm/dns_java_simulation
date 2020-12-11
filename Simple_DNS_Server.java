@@ -8,6 +8,7 @@
 import java.io.IOException;
 import java.net.*;
 import java.util.Arrays;
+import java.util.Random;
 
 public class Simple_DNS_Server
 {
@@ -33,6 +34,11 @@ public class Simple_DNS_Server
     // the flag to be set at response header
     //  e.g. 0x1234
     private short headerFlag;
+    
+    // Random Class object for generating possibility
+    Random possibilityGenerator;
+    // Random Class object for generating thread delay.
+    Random delayTimeGenerator;
     /** Constructor:
      * Take an IP address and a Port, both in string format,
      *  to create a Simple_DNS_Server object.
@@ -53,6 +59,9 @@ public class Simple_DNS_Server
         this.answer_IP = answer_IP;
         this.headerFlag = headerFlag;
         this.isSeverMode = true;
+        // initialize two random variable.
+        this.possibilityGenerator = new Random();
+        this.delayTimeGenerator = new Random();
     }
 
     /** Helper method:
@@ -186,31 +195,86 @@ public class Simple_DNS_Server
     }
 
     /** Helper method for sending DNS response in server mode.
+     * 2020 Dec 11st: current setting:
+     * In 80% of time, sever will wait 50ms before sending data.
+     *  Increasing RTT by 50ms.
+     * In 20% of time, server will wait (50-x)ms before sending data,
+     *  where 10 <= x < 45.
      * @param sendPacket: packet to be sent to client. */
     private void sendMessageInSeverMode(DatagramPacket sendPacket)
     {
-        // TODO: how do we implement it based on experiment setup?
         // Sometimes, the sever's packet may arrive earlier than
         //  attacker's packet.
-
-        // 2020-Dec-09-4:04PM:
-        // simple version, just send data
+        boolean hasSpecialDelday = false;
+        int specialDelayTime = 0;
+        int possibility = this.possibilityGenerator.nextInt(100);
+        if (possibility >= 80)
+        {
+            hasSpecialDelday = true;
+            int x = 10 + this.delayTimeGenerator.nextInt(35);
+            specialDelayTime = 50 - x;
+        }
+        
         try
         {
+            if (hasSpecialDelday) {
+                Thread.sleep(specialDelayTime);
+            }
+            else {
+                Thread.sleep(50);
+            }
+
             this.socket.send(sendPacket);
         }catch (IOException i)
         {
             System.out.println(i.getMessage());
+        }catch (InterruptedException e)
+        {
+            System.out.println("DNS_Server: interrupt while sleep.");
+            System.out.println(e.getMessage());
         }
 
     }
 
     /** Helper method for sending DNS response in attacker mode.
+     * 2020 Dec 11st: current settings:
+     * In 80% of the time, attacker immediately send packet;
+     * In 20% of the time, attacker delays X milliseconds,
+     *  then it sends the packet.
+     *
+     * If each link has 10ms delay, 80% of time server delay 50ms,
+     *  by experimental data, RTT from h1 to h3 is ~140ms.
+     *
+     * X value setting: 95 - 125 ms (for now).
      * @param sendPacket: packet to be sent to client.*/
     private void sendMessageInAttackerMode(DatagramPacket sendPacket)
     {
-        // TODO: how do we implement it based on experiment setup?
+        boolean hasDelay = false;
+        int possibility = this.possibilityGenerator.nextInt(100);
+        int delayTime = 0;
+        if (possibility >= 80)
+        {
+            hasDelay = true;
+            int additional = this.delayTimeGenerator.nextInt(30);
+            delayTime = 95 + additional;
+        }
 
+        // Sending packet
+        try
+        {
+            if (hasDelay){
+                Thread.sleep(delayTime);
+            }
+
+            this.socket.send(sendPacket);
+        }catch (IOException io)
+        {
+            System.out.println(io.getMessage());
+        }catch (InterruptedException i)
+        {
+            System.out.println("DNS_attacker: interrupt while sleep.");
+            System.out.println(i.getMessage());
+        }
     }
 
     /** Helper method:
