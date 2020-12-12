@@ -104,7 +104,16 @@ public class Simple_DNS_Client {
     public void running_client(String baseName, int numQuery)
     {
         System.out.println("DNS Client: start running.");
+        if (this.socket == null)
+        {
+            System.out.println("DNS Client: socket is null. Exit");
+            System.exit(0);
+        }
+
         String[] splitBaseName = this.splitBaseName(baseName);
+        AuthSeverStats severStats = this.createServerStats(20, RecordType.A);
+        System.out.println("severStats estimatedRtt: " + severStats.getEstimatedRTT()
+        + " devRTT: " + severStats.getDevRTT());
 
         for (int i = 0; i < numQuery; i++)
         {
@@ -206,11 +215,7 @@ public class Simple_DNS_Client {
      * @param queryName Domain name we want to query. */
     private void sendAndRecv_v0(String queryName)
     {
-        if (this.socket == null)
-        {
-            return; // we can't send nor receive packets.
-        }
-
+        // first create the packet to be sent.
         DatagramPacket queryPacket = this.createSendPacket(queryName,
                 this.server_addr, this.server_port);
         try
@@ -256,6 +261,16 @@ public class Simple_DNS_Client {
         }
     }
 
+
+    /** Send and receive message - version 1.
+     * first, send query to both attacker and server.
+     * then, use our version of DFP to handle possible attacks.
+     * @param queryName Domain name we want to query.*/
+    private void sendAndRecv_v1(String queryName)
+    {
+
+    }
+
     /** Helper method: create a Datagram Packet, which
      *      will be sent to server/attacker.
      *  @param queryName domain name in query.
@@ -274,5 +289,57 @@ public class Simple_DNS_Client {
 
         return new DatagramPacket(queryData, queryData.length,
                 dstAddress, destPort);
+    }
+
+    /** Helper method: create an AuthServerStats object.
+     *  Create an object, and update its estimatedRTT, devRTT
+     *      by sending X number of packets to server, and
+     *      record their RTT.
+     *  @param sampleCount the X value.
+     *  @param type Type of query client will perform. */
+    private AuthSeverStats createServerStats(int sampleCount, RecordType type)
+    {
+        String server_IP = this.server_addr.getHostAddress();
+        AuthSeverStats severStats = new AuthSeverStats(server_IP, type);
+
+        int errorCount = 0;
+        int successCount = 0;
+        while (true)
+        {
+            if ((successCount >= sampleCount) ||
+                    (errorCount >= sampleCount))
+            {
+                break;
+            }
+
+            DatagramPacket packet = this.createSendPacket("www.uwo.ca",
+                    this.server_addr, this.server_port);
+            try
+            {
+                // set time out; prepare packet for receiving data
+                this.socket.setSoTimeout(5000);
+                byte[] buffer = new byte[1024];
+                DatagramPacket recvPacket = new DatagramPacket(buffer, buffer.length);
+                // send and receive packets.
+                this.socket.send(packet);
+                long sendTime = System.currentTimeMillis();
+                this.socket.receive(recvPacket);
+                long recvTime = System.currentTimeMillis();
+                // calculate round trip time, and update server statistics.
+                int rtt = (int) (recvTime - sendTime);
+                severStats.updateSeverStats(rtt);
+                // now this round is successful.
+                successCount += 1;
+            } catch (IOException i)
+            {
+                errorCount += 1;
+            }
+        }
+
+        if (successCount < sampleCount){
+            // debug purpose.
+            System.out.println("DNS_Client: warning, insufficient sample count.");
+        }
+        return severStats;
     }
 }

@@ -31,13 +31,12 @@ public class AuthSeverStats {
 
     /** Default constructor
      * @param ip Sever ip address
-     * @param r type of query associate with this instance
-     * @param rtt round trip time for the query's first response.*/
-    public AuthSeverStats(String ip, RecordType r, int rtt)
+     * @param r type of query associate with this instance */
+    public AuthSeverStats(String ip, RecordType r)
     {
         this.serverIP = ip;
         this.type = r;
-        this.estimatedRTT = rtt;
+        this.estimatedRTT = 0;
         this.devRTT = 0; // no deviation yet.
     }
 
@@ -55,6 +54,18 @@ public class AuthSeverStats {
         return this.type;
     }
 
+    /** Helper method for getting estimatedRTT. */
+    public int getEstimatedRTT()
+    {
+        return this.estimatedRTT;
+    }
+
+    /** Helper method for getting devRTT. */
+    public double getDevRTT()
+    {
+        return this.devRTT;
+    }
+
     /** Update estimatedRTT and devRTT
      * For simplicity of our project, right now, let's
      *  not worry about when should a response's RTT be
@@ -66,6 +77,10 @@ public class AuthSeverStats {
      * @param rtt - round trip time of a response. */
     public void updateSeverStats(int rtt)
     {
+        if (this.estimatedRTT == 0)
+        {
+            this.estimatedRTT = rtt;
+        }
         this.estimatedRTT = (int) ((1 - this.alpha) *
                 this.estimatedRTT + this.alpha * rtt);
 
