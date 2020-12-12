@@ -394,7 +394,7 @@ public class Simple_Java_Udp {
             // args[4]: attacker's Port
             Simple_DNS_Client client = new Simple_DNS_Client(args[1],
                     args[2], args[3], args[4]);
-            client.running_client("www.uwo.ca", 5);
+            client.running_client("www.uwo.ca", 20);
             System.exit(0);
         }
 

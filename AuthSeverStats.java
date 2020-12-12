@@ -130,6 +130,23 @@ public class AuthSeverStats {
         return (int) (finalDevRTT * this.factorWindow);
     }
 
+    /** Helper method: check if one packet is an early packet.
+     * @param rtt Round trip time of one query/response.
+     * @return true is packet arrives before window start time.
+     *      false otherwise.
+     * @assume estimatedRTT and devRTT are not zero. */
+    public boolean isEarlyPacket(int rtt)
+    {
+        int windowStartTime = (int) (this.estimatedRTT -
+                this.devRTT * this.factorWindow);
+        if (rtt < windowStartTime)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
 
 
 }

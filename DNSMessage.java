@@ -1,3 +1,4 @@
+import java.net.DatagramPacket;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -29,6 +30,15 @@ public class DNSMessage implements Encodable
     private DNSResourceRecords dnsNameServers;
     private DNSResourceRecords dnsAdditionalRecords;
 
+
+    /** Static method: create DNS message from a datagram packet
+     * @param packet a Datagram Packet received by client/server.*/
+    public static DNSMessage getMessageFromPacket(DatagramPacket packet)
+    {
+        byte[] bytesBuffer = packet.getData();
+        BigEndianDecoder decoder = new BigEndianDecoder(bytesBuffer);
+        return new DNSMessage(decoder);
+    }
 
     /**
      * Constructor version 1:

@@ -120,7 +120,12 @@ public class Simple_DNS_Client {
             String queryName = this.createDomainName(splitBaseName,
                     i);
             // send and receive dns message, version 1
-            this.sendAndRecv_v0(queryName);
+//            this.sendAndRecv_v0(queryName);
+            System.out.println("******** Round: " + i + " ********");
+            this.sendAndRecv_v1(queryName, severStats);
+            System.out.println("********************");
+            System.out.println(" ");
+            System.out.println(" ");
         }
         // close the socket
         this.socket.close();
@@ -233,27 +238,9 @@ public class Simple_DNS_Client {
             int rtt = (int) (recvTime - sendTime);
 
             // decode response.
-            byte[] responseBuffer = recvPacket.getData();
-            BigEndianDecoder decoder = new BigEndianDecoder(responseBuffer);
-            DNSMessage responseMsg = new DNSMessage(decoder);
-
-            // retrieve information.
-            int qID = responseMsg.getQueryId();
-            String qName = responseMsg.getQueryName();
-            RecordType qType = RecordType.getByCode(
-                    responseMsg.getQType());
-            String[] IPs = responseMsg.retrieveDNSAnswers(qName, qType);
-
-            // print results.
-            System.out.println(qID + " " + qName + " "
-            + qType);
-            for (int i = 0; i < IPs.length; i++)
-            {
-                System.out.print(IPs[i]);
-                System.out.print(" ");
-            }
-            System.out.println(" RTT: " + rtt);
-            System.out.println(" ");
+            DNSMessage responseMsg = DNSMessage.getMessageFromPacket(recvPacket);
+            // retrieve information and print results
+            this.printAnswersFromResponse(responseMsg, rtt);
 
         }catch (IOException i)
         {
@@ -265,10 +252,74 @@ public class Simple_DNS_Client {
     /** Send and receive message - version 1.
      * first, send query to both attacker and server.
      * then, use our version of DFP to handle possible attacks.
-     * @param queryName Domain name we want to query.*/
-    private void sendAndRecv_v1(String queryName)
+     * @param queryName Domain name we want to query.
+     * @param severStats Server statistics. */
+    private void sendAndRecv_v1(String queryName, AuthSeverStats severStats)
     {
+        DatagramPacket toAttacker = this.createSendPacket(queryName,
+                this.attacker_addr, this.attackerPort);
+        DatagramPacket toSever = this.createSendPacket(queryName,
+                this.server_addr, this.server_port);
+        DatagramPacket receivePacket = this.createRecvPacket(1024);
+        DatagramPacket additionPacket = this.createRecvPacket(1024);
+        long sendTime  = 0; // time when we send the first packet.
+        long recvTime  = 0; // time when we receive the first packet.
+        int rtt = 0; // round trip time for the first  received packet.
+        long recvTime2 = 0; // time when we receive the second packet.
+        int rtt2 = 0; // round trip time for the second received packet.
 
+        long timeBeforeSecondRecv = 0;
+        try
+        {
+            this.socket.send(toAttacker);
+            sendTime = System.currentTimeMillis();
+            this.socket.send(toSever);
+            this.socket.setSoTimeout(0); // reset wait value.
+            this.socket.receive(receivePacket);
+            recvTime = System.currentTimeMillis();
+
+            rtt = (int) (recvTime - sendTime);
+            // now we calculate the time we need to wait for any more response
+            int waitTime = severStats.getFullWindowTime(rtt);
+            // set time out value, and waits for receive
+            System.out.println("wait time: " + waitTime + "ms");
+            this.socket.setSoTimeout(waitTime);
+
+            DNSMessage firstMsg = DNSMessage.getMessageFromPacket(receivePacket);
+            this.printAnswersFromResponse(firstMsg, rtt);
+
+            timeBeforeSecondRecv = System.currentTimeMillis();
+            this.socket.receive(additionPacket);
+
+            // we received a second packet!
+            recvTime2 = System.currentTimeMillis();
+            rtt2 = (int) (recvTime2 - sendTime);
+            System.out.println("another packet received! after " +
+                    rtt2 + "ms");
+
+            DNSMessage secondMsg = DNSMessage.getMessageFromPacket(additionPacket);
+            this.printAnswersFromResponse(secondMsg, rtt2);
+            //TODO: implement our imrpovments here.
+
+        }
+        catch (SocketTimeoutException t)
+        {
+            // we waits for some amount of time, no additional packets arrive.
+            // The first packet is a valid one.
+            recvTime2 = System.currentTimeMillis();
+            severStats.updateSeverStats(rtt);
+            System.out.println("Socket time out! after " +
+                    (recvTime2 - timeBeforeSecondRecv) + "ms!");
+
+            DNSMessage firstMsg = DNSMessage.getMessageFromPacket(receivePacket);
+            this.printAnswersFromResponse(firstMsg, rtt);
+
+        }
+        catch (IOException i)
+        {
+            System.out.println("DNS client: IO exception in sendAndRecv_v1");
+            System.out.println(i.getMessage());
+        }
     }
 
     /** Helper method: create a Datagram Packet, which
@@ -289,6 +340,14 @@ public class Simple_DNS_Client {
 
         return new DatagramPacket(queryData, queryData.length,
                 dstAddress, destPort);
+    }
+
+    /** Helper method for creating a datagram packet,
+     *      which used for socket.receive() method. */
+    private DatagramPacket createRecvPacket(int bufferSize)
+    {
+        byte[] bytesBuffer = new byte[bufferSize];
+        return new DatagramPacket(bytesBuffer, bufferSize);
     }
 
     /** Helper method: create an AuthServerStats object.
@@ -341,5 +400,30 @@ public class Simple_DNS_Client {
             System.out.println("DNS_Client: warning, insufficient sample count.");
         }
         return severStats;
+    }
+
+    /** Helper method for printing results.
+     * @param responseMsg DNS Message decoded from a response packet.
+     * @param rtt round trip time of the packet. */
+    private void printAnswersFromResponse(DNSMessage responseMsg, int rtt)
+    {
+        // retrieve information.
+        int qID = responseMsg.getQueryId();
+        String qName = responseMsg.getQueryName();
+        RecordType qType = RecordType.getByCode(
+                responseMsg.getQType());
+        String[] IPs = responseMsg.retrieveDNSAnswers(qName, qType);
+
+        // print results.
+        System.out.println(qID + " " + qName + " "
+                + qType);
+        for (int i = 0; i < IPs.length; i++)
+        {
+            System.out.print(IPs[i]);
+            System.out.print(" ");
+        }
+        System.out.println(" RTT: " + rtt);
+        System.out.println("----------------");
+        System.out.println(" ");
     }
 }
