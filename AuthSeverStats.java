@@ -1,5 +1,3 @@
-
-
 /** Class represents authority server statistics:
  * This class keep records of an authority sever's
  * IP address, type associate with the statistics.
@@ -10,7 +8,6 @@
  *
  * Two statistics are recorded: RTT - Round Trip Time,
  *  and DevRTT - deviation of RTT. */
-
 public class AuthSeverStats {
 
     // IP address of server, in string format
