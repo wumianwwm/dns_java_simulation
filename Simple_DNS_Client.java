@@ -252,6 +252,15 @@ public class Simple_DNS_Client {
     /** Send and receive message - version 1.
      * first, send query to both attacker and server.
      * then, use our version of DFP to handle possible attacks.
+     *
+     * This version will focus on handling duplicate response to a
+     *  single query.
+     *
+     * It will implement in a way that, for each packet we receive
+     *  and plan to process, it will be a expected response.
+     *
+     * In other words, a response with expected query name and ID,
+     *  not a query name from previous query sent to server/attacker.
      * @param queryName Domain name we want to query.
      * @param severStats Server statistics. */
     private void sendAndRecv_v1(String queryName, AuthSeverStats severStats)
@@ -268,7 +277,6 @@ public class Simple_DNS_Client {
         long recvTime2 = 0; // time when we receive the second packet.
         int rtt2 = 0; // round trip time for the second received packet.
 
-        long timeBeforeSecondRecv = 0;
         try
         {
             this.socket.send(toAttacker);
@@ -276,27 +284,25 @@ public class Simple_DNS_Client {
             this.socket.send(toSever);
             this.socket.setSoTimeout(0); // reset wait value.
             this.socket.receive(receivePacket);
-            recvTime = System.currentTimeMillis();
 
+            recvTime = System.currentTimeMillis();
             rtt = (int) (recvTime - sendTime);
+
             // now we calculate the time we need to wait for any more response
             int waitTime = severStats.getFullWindowTime(rtt);
-            // set time out value, and waits for receive
-            System.out.println("wait time: " + waitTime + "ms");
+            // set time out value, and waits for received message
             this.socket.setSoTimeout(waitTime);
-
-            DNSMessage firstMsg = DNSMessage.getMessageFromPacket(receivePacket);
-            this.printAnswersFromResponse(firstMsg, rtt);
-
-            timeBeforeSecondRecv = System.currentTimeMillis();
             this.socket.receive(additionPacket);
 
             // we received a second packet!
             recvTime2 = System.currentTimeMillis();
             rtt2 = (int) (recvTime2 - sendTime);
-            System.out.println("another packet received! after " +
-                    rtt2 + "ms");
 
+            System.out.println("first received packet: ");
+            DNSMessage firstMsg = DNSMessage.getMessageFromPacket(receivePacket);
+            this.printAnswersFromResponse(firstMsg, rtt);
+
+            System.out.println("second received packet: ");
             DNSMessage secondMsg = DNSMessage.getMessageFromPacket(additionPacket);
             this.printAnswersFromResponse(secondMsg, rtt2);
             //TODO: implement our imrpovments here.
@@ -309,11 +315,27 @@ public class Simple_DNS_Client {
             recvTime2 = System.currentTimeMillis();
             severStats.updateSeverStats(rtt);
             System.out.println("Socket time out! after " +
-                    (recvTime2 - timeBeforeSecondRecv) + "ms!");
-
+                    (recvTime2 - sendTime) + "ms we sent the first packet!");
+            // now we print the first packet.
+            System.out.println("first received packet: ");
             DNSMessage firstMsg = DNSMessage.getMessageFromPacket(receivePacket);
             this.printAnswersFromResponse(firstMsg, rtt);
 
+            /** Notice from experiment:
+             * The following results is observed from experiment.
+             * Client: send query #5 to server and attacker.
+             *
+             * Both server and attacker sends response back.
+             *
+             * However, the attacker's response did not arrive even
+             *  we have catch a socket timeout.
+             *
+             * In other words, if we do not handle that late arrive packet,
+             *  it will be extracted from socket's receive buffer, and used
+             *  in the next round of comparison.*/
+
+            // call helper method to discard late arrive packets.
+            this.discardLateArrivedPacket(severStats);
         }
         catch (IOException i)
         {
@@ -400,6 +422,44 @@ public class Simple_DNS_Client {
             System.out.println("DNS_Client: warning, insufficient sample count.");
         }
         return severStats;
+    }
+
+    /** Helper method for sendAndRecv_v1:
+     * Discard a late arrive packet. Because within our waiting
+     *  window, the packet did not arrive.
+     * We need to explicitly extract it out off socket's receive
+     *  buffer, so that it won't affect further experiments.
+     *
+     * @param severStats used to get estimatedRTT. */
+    private void discardLateArrivedPacket(AuthSeverStats severStats)
+    {
+        int trialTime = 0; // how many times we have tried the code below?
+        DatagramPacket recvPacket = this.createRecvPacket(512);
+        // try to handle delay packets, allow at most 10 failures.
+        while (trialTime < 10)
+        {
+            try
+            {
+                // we try to set socket time out value to be estimated
+                //  round trip time between client/server.
+                this.socket.setSoTimeout(severStats.getEstimatedRTT());
+                // now see if any late packets arrived.
+                this.socket.receive(recvPacket);
+            }catch (SocketTimeoutException t)
+            {
+                // Okay, no more delayed packet.
+                break;
+            }catch (IOException i)
+            {
+                System.out.println(i.getMessage());
+                trialTime += 1;
+            }
+        }
+
+        if (trialTime >= 10)
+        {
+            System.out.println("client: discard late packet: error.");
+        }
     }
 
     /** Helper method for printing results.
