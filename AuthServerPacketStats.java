@@ -1,6 +1,4 @@
 import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.util.List;
 
 /** Represents the packet statistics.
  *
@@ -39,7 +37,7 @@ public class AuthServerPacketStats
      * @param severStats Authoritative server statistics.
      * @param rtt round trip time of that DNS message. */
     public AuthServerPacketStats(DatagramPacket packet,
-                                 AuthSeverStats severStats,
+                                 AuthServerStats severStats,
                                  int rtt)
     {
         DNSMessage responseMsg = DNSMessage.getMessageFromPacket(packet);
@@ -99,7 +97,7 @@ public class AuthServerPacketStats
      *
      * @param rtt  round trip time of a packet.
      * @param severStats authoritative server statistics. */
-    public void updateInWindowTimeCount(int rtt, AuthSeverStats severStats)
+    public void updateInWindowTimeCount(int rtt, AuthServerStats severStats)
     {
         if (!severStats.isEarlyPacket(rtt))
         {

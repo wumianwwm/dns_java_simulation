@@ -1,8 +1,134 @@
 
-Last edit: 2020 Dec 7th 9:16 AM
+Last edit: 2020 Dec 14th 5:35 PM
 
 These java files aim to provide simulation of a DNS client, a DNS server
 and an attacker that aims to cache poisoning the DNS client.
+
+---------------------------------------------------------------------------------
+------------- Guide and Experiment Setup: Simple_DNS_Client/Sever ---------------
+Topology setup: See project_mininet_v0.py.
+    link between a host and a switch has 15 Mbps bandwidth, 1 ms delay.
+    link between two switches has 15 Mbps bandwidth, 10 ms delay.
+
+**************** Experiment running guide: *****************
+First: running floodlight VM, open a terminal, run following commands:
+        cd floodlight
+        ant #(If you haven't)
+        java -jar /target/floodlight.jar
+
+Copy all project code to a directory, e.g. 00_04_project_repo/
+
+Open another terminal, run following commands:
+        cd Desktop/00_04_project_repo
+        rm -rf *.class
+        javac Simple_Java_Udp.java
+        sudo mn -c #(If need password, it is "floodlight")
+        sudo python project_mininet_v0.py
+
+Now mininet should start running, run following command:
+        xterm h1 h2 h3
+
+On h1's terminal, type following command (do not press "enter" yet):
+        java Simple_Java_Udp dnsClient 10.0.0.3 12345 10.0.0.2 23456
+
+On h2's terminal, type following command (do not press "enter yet)":
+        java Simple_Java_Udp dnsAttacker 10.0.0.2 23456
+
+On h3's terminal, type following command, and run it
+        java Simple_Java_Udp dnsServer 10.0.0.3 12345
+
+Now go back to h2 FIRST, run it. THEN go back to h1, run it.
+************************************************************
+
+
+******************** Simple_DNS_Server: ********************
+This class represents a server that handles a DNS query. Default setting is to run
+    as authoritative server. By changeModeToAttacker() method, it will run as an
+    attacker.
+Difference between server and attacker is how we simulate the send method.
+
+For server: in 80% of time, after received client query, server waits 50 ms, then
+    it sends data to server. In 20% of time, server waits (50 - x) ms, where
+    10 <= x < 45.
+By experimental observation, under such setting, the estimated Round Trip Time
+    between h1(client) and h3(server) is ~140 ms.
+
+For attacker: in 80% of time, attacker immediately sends response back to client.
+    In 20% of time, attacker waits X ms, where 95 <= X < 125 ms. Then it sends
+    response back to client.
+
+In experimental observation, these setting can simulate cases, when both
+    attacker's and server's response fall in window time.
+    e.g. Attacker's response RTT: 141 ms; 142 ms; 138 ms; 130 ms;
+         Server's response RTT:   149 ms; 139 ms; 144 ms; 141 ms;
+************************************************************
+
+
+******************** Simple_DNS_Client: ********************
+This client creates a DNS query, sends to server, and waits for response.
+
+For current simulation, client will first establish statistics for server.
+    This is done by creating an AuthServerStats object, and tries to send
+    20 packets to server, get response, update the server statistics.
+    SEE BELOW FOR INFO ABOUT AuthServerStats/PacketStats.
+
+To simulate attacker eavesdropping the message. For each query, client sends
+    two identical query packet. One to attacker, one to server.
+
+The client then waits for response, if one response received, client waits for
+    window time, calculated from server statistics. If another packet arrives,
+    run our version of dfp_rescue method. To see which one of the packet comes
+    from server.
+************************************************************
+------------- Guide and Experiment Setup: Simple_DNS_Client/Sever ---------------
+---------------------------------------------------------------------------------
+
+
+
+
+---------------------------------------------------------------------------------
+-------------------- Guide for AuthServerStats/PacketStats ----------------------
+*********************** AuthServerStats: ***********************
+This class stands statistics for a server. Including estimated Round Trip time,
+    deviation of Round Trip Time.
+
+When a packet arrives, after calculate its Round Trip Time(RTT), we use server
+    statistics to determine how long we should wait for another packet.
+We also determine if a packet is an early packet, by using info in this class.
+****************************************************************
+
+
+******************** AuthServerPacketStats: ********************
+This class stands for packet statistics.
+
+If we receive two response packets, lets say - PACKET A and PACKET B,
+    for one query. They come from different sources, have expected domain name
+    we look for in query. Then we need to created two packet statistics
+    instances for these two response packets.
+
+Then client start dfp_rescue method: It resend the query to server, and waits for
+    response.
+
+For any response client receives, it check if that response come from any one of
+    the packet A/B's source. We update that packet statistics info.
+
+The main info we need to update, is "whether the received packet fall within
+    window time".
+
+After client re-send query multiple times, it check the two packet statistics.
+
+By our theory and experiment setup, packet from actual server has higher chance
+    that its RTT fall within window time, i.e., not come too early.
+
+Thus, by comparing packet statistics info, we hope to figure out, which packet
+    A or B, comes from actual server.
+****************************************************************
+-------------------- Guide for AuthServerStats/PacketStats ----------------------
+---------------------------------------------------------------------------------
+
+
+
+
 
 ------------- Quick guide to DNS message encoding/ decoding ---------------
 The comments I made before should provide some explanation about different classes,
@@ -62,21 +188,14 @@ Port is the port number you setup for the sever, like "12345"
 Once sever start running, server waits for message from client. After you
 typed something on client's terminal, server should able to receive it.
 
-Now you need to press a key like "c" to continue.
-
-If you type "quit", you can quit the server.
-
-
+Now you need to press a key like "c" to continue.If you type "quit",
+you can quit the server.
 ****To run as a client. use:
     "java Simple_Java_Udp client server-host port"
-
 Now if you type something on client's terminal, it should be sent to sever.
-
 If you type "quit", you can quit the client.
 
-NOTE: These cannot be used for our project directly, these are just for
-    testing, to see if we can run java program that sends/receive UDP packets
-    under mininet hosts' terminals.
+NOTE: Please check "Guide and Experiment Setup: Simple_DNS_Client/Server".
 --------------------------------------------------------------------------------
 
 
@@ -85,26 +204,13 @@ Some of the code are referenced from Wumian Wang's previous project, which
 built a simple DNS resolver that can encode a DNS packet, send to a DNS server,
 receive DNS response message and decode it.
 
-Here we acknowledge that method for encoding a DNS message, and decoding
-a DNS response message, are adapted from the previous work.
+Here we acknowledge that method for encoding and decoding a DNS message
+are adapted from the previous work's framework.
+-------------------
 
-For simplicity, DNScache, DNSnode, ResourceRecord, and methods for actual
-DNS lookup with real DNS servers, are (plan) not to be used in the
-research project.
+Summary: Now we have implemented out version of dfp, further adjustment will
+    based on experiment requirements.
 
-We will add functions that allow us to create a DNS response message,
-similar to those created by actual DNS servers.
-
-We will add classes and functions to represent different role: client, server,
-and attacker.
-// --------------------------------
-two possible to-do:
-TODO:
-we have implemented a DNS Server, testing may needed.
-But we still need a client that implements DFP, and an attacker.
-
-The attacker can use the server code. So adjustment may needed.
-
-TODO: we need to implement DFP algorithm in the DNS client.
-// right now, using javac Simple_Java_Udp.java seems working, if all java files
-are in the same directory.
+Possible TODO:
+    1. Make output to a text file;
+    2. adjust experiment setup;

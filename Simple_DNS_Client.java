@@ -113,7 +113,7 @@ public class Simple_DNS_Client {
         }
 
         String[] splitBaseName = this.splitBaseName(baseName);
-        AuthSeverStats severStats = this.createServerStats(20, RecordType.A);
+        AuthServerStats severStats = this.createServerStats(20, RecordType.A);
         System.out.println("severStats estimatedRtt: " + severStats.getEstimatedRTT()
         + " devRTT: " + severStats.getDevRTT());
 
@@ -266,7 +266,7 @@ public class Simple_DNS_Client {
      *  not a query name from previous query sent to server/attacker.
      * @param queryName Domain name we want to query.
      * @param severStats Server statistics. */
-    private void sendAndRecv_v1(String queryName, AuthSeverStats severStats)
+    private void sendAndRecv_v1(String queryName, AuthServerStats severStats)
     {
         int queryId = this.random.nextInt(65535);
         DatagramPacket toAttacker = this.createSendPacket(queryName,
@@ -408,10 +408,10 @@ public class Simple_DNS_Client {
      *      record their RTT.
      *  @param sampleCount the X value.
      *  @param type Type of query client will perform. */
-    private AuthSeverStats createServerStats(int sampleCount, RecordType type)
+    private AuthServerStats createServerStats(int sampleCount, RecordType type)
     {
         String server_IP = this.server_addr.getHostAddress();
-        AuthSeverStats severStats = new AuthSeverStats(server_IP, type);
+        AuthServerStats severStats = new AuthServerStats(server_IP, type);
         int queryId = this.random.nextInt(65535);
 
         int errorCount = 0;
@@ -471,7 +471,7 @@ public class Simple_DNS_Client {
      *  The first one will always created from the first packet.
      *  The second one will always created from the second packet. */
     private AuthServerPacketStats[] createPacketStatsArray(
-            String queryName, AuthSeverStats severStats,
+            String queryName, AuthServerStats severStats,
             DatagramPacket firstReceived, int rtt1,
             DatagramPacket secondReceived, int rtt2)
     {
@@ -527,7 +527,7 @@ public class Simple_DNS_Client {
      * @return -1 - we failed to distinguish which packet is valid one;
      *         0 - the first packet is the valid one.
      *         1 - the second packet is the valid one.*/
-    private int v1_dfp_rescue(String queryName, AuthSeverStats severStats,
+    private int v1_dfp_rescue(String queryName, AuthServerStats severStats,
                               AuthServerPacketStats[] pktStatsArr)
     {
         int queryId = 0; // id in DNS header
@@ -619,7 +619,7 @@ public class Simple_DNS_Client {
      * @param recvPkt a new received packets.
      * @param rtt round trip time of the packet. */
     private void update_pktStatsArr(AuthServerPacketStats[] pktStatsArr,
-                                    AuthSeverStats severStats,
+                                    AuthServerStats severStats,
                                     DatagramPacket recvPkt,
                                     int rtt)
     {
@@ -640,7 +640,7 @@ public class Simple_DNS_Client {
      *  buffer, so that it won't affect further experiments.
      *
      * @param severStats used to get estimatedRTT. */
-    private void discardLateArrivedPacket(AuthSeverStats severStats)
+    private void discardLateArrivedPacket(AuthServerStats severStats)
     {
         int trialTime = 0; // how many times we have tried the code below?
         DatagramPacket recvPacket = this.createRecvPacket(512);

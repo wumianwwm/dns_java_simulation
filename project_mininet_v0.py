@@ -31,7 +31,7 @@ import os
 # h3 -- s5
 #
 #----------------
-# h1: represents DNS local resover
+# h1: represents DNS local resolver
 # h2: represents the attacker
 # h3: represents the remote DNS server.
 #

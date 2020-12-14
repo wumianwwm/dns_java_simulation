@@ -8,7 +8,7 @@
  *
  * Two statistics are recorded: RTT - Round Trip Time,
  *  and DevRTT - deviation of RTT. */
-public class AuthSeverStats {
+public class AuthServerStats {
 
     // IP address of server, in string format
     private String serverIP;
@@ -29,7 +29,7 @@ public class AuthSeverStats {
     /** Default constructor
      * @param ip Sever ip address
      * @param r type of query associate with this instance */
-    public AuthSeverStats(String ip, RecordType r)
+    public AuthServerStats(String ip, RecordType r)
     {
         this.serverIP = ip;
         this.type = r;
