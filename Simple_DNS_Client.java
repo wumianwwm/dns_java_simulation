@@ -223,8 +223,9 @@ public class Simple_DNS_Client {
     private void sendAndRecv_v0(String queryName)
     {
         // first create the packet to be sent.
+        int queryId = this.random.nextInt(65535);
         DatagramPacket queryPacket = this.createSendPacket(queryName,
-                this.server_addr, this.server_port);
+                this.server_addr, this.server_port, queryId);
         try
         {
             this.socket.send(queryPacket);
@@ -267,10 +268,11 @@ public class Simple_DNS_Client {
      * @param severStats Server statistics. */
     private void sendAndRecv_v1(String queryName, AuthSeverStats severStats)
     {
+        int queryId = this.random.nextInt(65535);
         DatagramPacket toAttacker = this.createSendPacket(queryName,
-                this.attacker_addr, this.attackerPort);
+                this.attacker_addr, this.attackerPort, queryId);
         DatagramPacket toSever = this.createSendPacket(queryName,
-                this.server_addr, this.server_port);
+                this.server_addr, this.server_port, queryId);
         DatagramPacket firstRecv = this.createRecvPacket(1024);
         DatagramPacket secondrecv = this.createRecvPacket(1024);
         long sendTime  = 0; // time when we send the first packet.
@@ -378,14 +380,13 @@ public class Simple_DNS_Client {
      *  @param queryName domain name in query.
      *  @param dstAddress destination address of the packet.
      *  @param destPort destination port of the packet.
+     *  @param queryId  ID in dns header.
      *  @return a Datagram Packet ready to be sent. */
     private DatagramPacket createSendPacket(String queryName, InetAddress dstAddress,
-                                            int destPort)
+                                            int destPort, int queryId)
     {
-        // if needed, we will adjust this method, so that all
-        //  query have different query ID.
-        int randomId = this.random.nextInt(65535);
-        DNSMessage queryMsg = new DNSMessage(queryName, randomId, RecordType.A);
+        // two packets will have same ID in header, if they use same queryId.
+        DNSMessage queryMsg = new DNSMessage(queryName, queryId, RecordType.A);
         queryMsg.encode(queryMsg.getEncoder());
         byte[] queryData = queryMsg.tobytesBuffer();
 
@@ -411,6 +412,7 @@ public class Simple_DNS_Client {
     {
         String server_IP = this.server_addr.getHostAddress();
         AuthSeverStats severStats = new AuthSeverStats(server_IP, type);
+        int queryId = this.random.nextInt(65535);
 
         int errorCount = 0;
         int successCount = 0;
@@ -423,7 +425,7 @@ public class Simple_DNS_Client {
             }
 
             DatagramPacket packet = this.createSendPacket("www.uwo.ca",
-                    this.server_addr, this.server_port);
+                    this.server_addr, this.server_port, queryId);
             try
             {
                 // set time out; prepare packet for receiving data
@@ -528,6 +530,7 @@ public class Simple_DNS_Client {
     private int v1_dfp_rescue(String queryName, AuthSeverStats severStats,
                               AuthServerPacketStats[] pktStatsArr)
     {
+        int queryId = 0; // id in DNS header
         long sendTime  = 0; // time when we send the first packet.
         long recvTime  = 0; // time when we receive the first packet.
         int rtt = 0; // round trip time for the first  received packet.
@@ -537,10 +540,11 @@ public class Simple_DNS_Client {
 
         for (int i = 0; i < 5; i++)
         {
+            queryId = this.random.nextInt(65535);
             DatagramPacket toAttacker = this.createSendPacket(queryName,
-                    this.attacker_addr, this.attackerPort);
+                    this.attacker_addr, this.attackerPort, queryId);
             DatagramPacket toSever = this.createSendPacket(queryName,
-                    this.server_addr, this.server_port);
+                    this.server_addr, this.server_port, queryId);
             DatagramPacket firstRecv = this.createRecvPacket(1024);
             DatagramPacket secondRecv = this.createRecvPacket(1024);
             // we try to receive the first packet.
