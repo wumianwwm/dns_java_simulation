@@ -324,19 +324,23 @@ public class Simple_DNS_Client {
             }
             // now we can for sure that, the packet statistics has two elements.
             int rv = this.v1_dfp_rescue(queryName, severStats, statsArr);
-            if (rv == -1)
+            switch (rv)
             {
-                System.out.println(queryName + " IP: " + "failed to get IP");
-                return;
+                case -1:
+                    System.out.println(queryName + " IP: failed to get IP");
+                    return;
+                case 0:
+                    // we update server stats using the first rtt
+//                    System.out.println("Update server stats using " + rtt);
+                    severStats.updateSeverStats(rtt);
+                    break;
+                case 1:
+                    // we update server stats using the second rtt.
+//                    System.out.println("Update server stats using " + rtt2);
+                    severStats.updateSeverStats(rtt2);
             }
             // print answer.
-            System.out.println(queryName + "IP: " + statsArr[rv].getIp_addresses()[0]);
-//            for (int i = 0; i < statsArr.length; i++)
-//            {
-//                // debug purpose.
-//                System.out.print(statsArr[i].getServer_address() + ": ");
-//                System.out.println(statsArr[i].getIp_addresses()[0]);
-//            }
+            System.out.println(queryName + " IP: " + statsArr[rv].getIp_addresses()[0]);
 
         }
         catch (SocketTimeoutException t)
@@ -344,6 +348,7 @@ public class Simple_DNS_Client {
             // we waits for some amount of time, no additional packets arrive.
             // The first packet is a valid one.
             recvTime2 = System.currentTimeMillis();
+            // since first one is valid, we update the server statistics here.
             severStats.updateSeverStats(rtt);
             System.out.println("Socket time out! after " +
                     (recvTime2 - sendTime) + "ms we sent the first packet!");
