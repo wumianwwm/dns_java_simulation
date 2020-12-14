@@ -1,5 +1,7 @@
 import java.io.IOException;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class Simple_DNS_Client {
@@ -279,10 +281,10 @@ public class Simple_DNS_Client {
 
         try
         {
+            this.socket.setSoTimeout(0); // reset wait time.
             this.socket.send(toAttacker);
             sendTime = System.currentTimeMillis();
             this.socket.send(toSever);
-            this.socket.setSoTimeout(0); // reset wait value.
             this.socket.receive(receivePacket);
 
             recvTime = System.currentTimeMillis();
@@ -423,6 +425,51 @@ public class Simple_DNS_Client {
         }
         return severStats;
     }
+
+    /** Helper method: create an array of AuthServerPacketStats objects.
+     * Given the two datagram packets received, check if they are
+     *  responses to the domain name in query sent from client.
+     *
+     * @param queryName domain name sent in query.
+     * @param severStats  authoritative server statistics
+     * @param firstReceived the first received datagram packet.
+     * @param rtt1 round trip time of the first packet.
+     * @param secondReceived the second received datagram packet.
+     * @param rtt2 round trip time of the second packet.
+     *
+     * @return an array of AuthServerPacketStats.
+     *  May be 0, 1, or 2 element.
+     *  The first one will always created from the first packet.
+     *  The second one will always created from the second packet. */
+    private AuthServerPacketStats[] createPacketStatsArray(
+            String queryName, AuthSeverStats severStats,
+            DatagramPacket firstReceived, int rtt1,
+            DatagramPacket secondReceived, int rtt2)
+    {
+        AuthServerPacketStats firstPacketStat = new AuthServerPacketStats(firstReceived,
+                severStats, rtt1);
+        AuthServerPacketStats secondPacketStat = new AuthServerPacketStats(secondReceived,
+                severStats, rtt2);
+
+        List<AuthServerPacketStats> statsList = new ArrayList<>();
+        if (firstPacketStat.getQueryName().equals(queryName))
+        {
+            statsList.add(firstPacketStat);
+        }
+        if (secondPacketStat.getQueryName().equals(queryName))
+        {
+            statsList.add(secondPacketStat);
+        }
+        int elementCount = statsList.size();
+        AuthServerPacketStats[] statsArray = new AuthServerPacketStats[elementCount];
+        for (int i = 0; i < elementCount; i++)
+        {
+            statsArray[i] = statsList.get(i);
+        }
+
+        return statsArray;
+    }
+
 
     /** Helper method for sendAndRecv_v1:
      * Discard a late arrive packet. Because within our waiting

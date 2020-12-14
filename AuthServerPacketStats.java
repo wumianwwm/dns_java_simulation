@@ -16,7 +16,10 @@ import java.util.List;
  *  to fall within window time, than packets coming from actual server
  *
  * This class aims to represent the statistics of several packets
- *  received from an "authoritative server". */
+ *  received from an "authoritative server".
+ *
+ * In some cases, this class can represents a simplified DNS response
+ *  message, extracted from a datagram packet. */
 public class AuthServerPacketStats
 {
     // the IP address where the packet comes from.
