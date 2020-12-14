@@ -271,8 +271,8 @@ public class Simple_DNS_Client {
                 this.attacker_addr, this.attackerPort);
         DatagramPacket toSever = this.createSendPacket(queryName,
                 this.server_addr, this.server_port);
-        DatagramPacket receivePacket = this.createRecvPacket(1024);
-        DatagramPacket additionPacket = this.createRecvPacket(1024);
+        DatagramPacket firstRecv = this.createRecvPacket(1024);
+        DatagramPacket secondrecv = this.createRecvPacket(1024);
         long sendTime  = 0; // time when we send the first packet.
         long recvTime  = 0; // time when we receive the first packet.
         int rtt = 0; // round trip time for the first  received packet.
@@ -285,7 +285,7 @@ public class Simple_DNS_Client {
             this.socket.send(toAttacker);
             sendTime = System.currentTimeMillis();
             this.socket.send(toSever);
-            this.socket.receive(receivePacket);
+            this.socket.receive(firstRecv);
 
             recvTime = System.currentTimeMillis();
             rtt = (int) (recvTime - sendTime);
@@ -294,20 +294,47 @@ public class Simple_DNS_Client {
             int waitTime = severStats.getFullWindowTime(rtt);
             // set time out value, and waits for received message
             this.socket.setSoTimeout(waitTime);
-            this.socket.receive(additionPacket);
+            this.socket.receive(secondrecv);
 
             // we received a second packet!
             recvTime2 = System.currentTimeMillis();
             rtt2 = (int) (recvTime2 - sendTime);
 
             System.out.println("first received packet: ");
-            DNSMessage firstMsg = DNSMessage.getMessageFromPacket(receivePacket);
+            DNSMessage firstMsg = DNSMessage.getMessageFromPacket(firstRecv);
             this.printAnswersFromResponse(firstMsg, rtt);
 
             System.out.println("second received packet: ");
-            DNSMessage secondMsg = DNSMessage.getMessageFromPacket(additionPacket);
+            DNSMessage secondMsg = DNSMessage.getMessageFromPacket(secondrecv);
             this.printAnswersFromResponse(secondMsg, rtt2);
             //TODO: implement our imrpovments here.
+            AuthServerPacketStats[] statsArr = this.createPacketStatsArray(queryName,
+                    severStats, firstRecv, rtt, secondrecv, rtt2);
+            switch (statsArr.length)
+            {
+                case 0:
+                    System.out.println("error: no packet is valid");
+                    break;
+                case 1:
+                    System.out.println("final answer:"+statsArr[0].getQueryName()
+                    + " " + statsArr[0].getIp_addresses()[0]);
+                    break;
+            }
+            // now we can for sure that, the packet statistics has two elements.
+            int rv = this.v1_dfp_rescue(queryName, severStats, statsArr);
+            if (rv == -1)
+            {
+                System.out.println(queryName + " IP: " + "failed to get IP");
+                return;
+            }
+            // print answer.
+            System.out.println(queryName + "IP: " + statsArr[rv].getIp_addresses()[0]);
+//            for (int i = 0; i < statsArr.length; i++)
+//            {
+//                // debug purpose.
+//                System.out.print(statsArr[i].getServer_address() + ": ");
+//                System.out.println(statsArr[i].getIp_addresses()[0]);
+//            }
 
         }
         catch (SocketTimeoutException t)
@@ -320,7 +347,7 @@ public class Simple_DNS_Client {
                     (recvTime2 - sendTime) + "ms we sent the first packet!");
             // now we print the first packet.
             System.out.println("first received packet: ");
-            DNSMessage firstMsg = DNSMessage.getMessageFromPacket(receivePacket);
+            DNSMessage firstMsg = DNSMessage.getMessageFromPacket(firstRecv);
             this.printAnswersFromResponse(firstMsg, rtt);
 
             /** Notice from experiment:
@@ -451,6 +478,14 @@ public class Simple_DNS_Client {
         AuthServerPacketStats secondPacketStat = new AuthServerPacketStats(secondReceived,
                 severStats, rtt2);
 
+        String firstPktServerAddr = firstPacketStat.getServer_address();
+        String secondPktServerAddr = secondPacketStat.getServer_address();
+        if (firstPktServerAddr.equals(secondPktServerAddr))
+        {
+            // if two packets come from the same source, some error occurs.
+            return new AuthServerPacketStats[0];
+        }
+
         List<AuthServerPacketStats> statsList = new ArrayList<>();
         if (firstPacketStat.getQueryName().equals(queryName))
         {
@@ -468,6 +503,129 @@ public class Simple_DNS_Client {
         }
 
         return statsArray;
+    }
+
+
+    /** Handle case when we receive two response from different servers,
+     *   and both of them looks like "valid" response.
+     * Resend the query to both attacker and server, 5 times.
+     * Receive response, based on same logic in sendAndRecv_v1().
+     * Update packet statistics.
+     * After 5 times, check which packet statistic has more
+     *  counts within window time.
+     *
+     * Note: I know this method is reusing some code in sendAndRecv_v1()...
+     * So many optimization thoughts, (due to procrastination) so little time T_T...
+     * @param queryName domain name in the query.
+     * @param severStats authoritative server statistics
+     * @param pktStatsArr an array of packet statistics. only call
+     *                    this method when array has exact 2 elements.
+     *         Fist element stands for the first received packet;
+     *         Second element stands for the second received packet.
+     * @return -1 - we failed to distinguish which packet is valid one;
+     *         0 - the first packet is the valid one.
+     *         1 - the second packet is the valid one.*/
+    private int v1_dfp_rescue(String queryName, AuthSeverStats severStats,
+                              AuthServerPacketStats[] pktStatsArr)
+    {
+        long sendTime  = 0; // time when we send the first packet.
+        long recvTime  = 0; // time when we receive the first packet.
+        int rtt = 0; // round trip time for the first  received packet.
+        long recvTime2 = 0; // time when we receive the second packet.
+        int rtt2 = 0; // round trip time for the second received packet.
+        int waitTime = 0; // time to wait for second packet.
+
+        for (int i = 0; i < 5; i++)
+        {
+            DatagramPacket toAttacker = this.createSendPacket(queryName,
+                    this.attacker_addr, this.attackerPort);
+            DatagramPacket toSever = this.createSendPacket(queryName,
+                    this.server_addr, this.server_port);
+            DatagramPacket firstRecv = this.createRecvPacket(1024);
+            DatagramPacket secondRecv = this.createRecvPacket(1024);
+            // we try to receive the first packet.
+            try
+            {
+                // set wait time to 30 seconds, if no packets come back, its lost.
+                this.socket.setSoTimeout(300000);
+                this.socket.send(toAttacker);
+                sendTime = System.currentTimeMillis();
+                this.socket.send(toSever);
+                this.socket.receive(firstRecv);
+                recvTime = System.currentTimeMillis();
+                rtt = (int) (recvTime - sendTime);
+            }catch (SocketTimeoutException t)
+            {
+                // we lost the first received packet.
+                this.discardLateArrivedPacket(severStats);
+                continue;
+            }catch (IOException io)
+            {
+                System.out.println("v1_dfp_rescue: IO error.");
+                System.out.println(io.getMessage());
+                continue;
+            }
+            // we try to receive the second packet
+            try
+            {
+                waitTime = severStats.getFullWindowTime(rtt);
+                this.socket.setSoTimeout(waitTime);
+                this.socket.receive(secondRecv);
+                // now, again, second packet arrives.
+                recvTime2 = System.currentTimeMillis();
+                rtt2 = (int) (recvTime2 - sendTime);
+                // update the packet statistics
+                this.update_pktStatsArr(pktStatsArr, severStats, firstRecv, rtt);
+                this.update_pktStatsArr(pktStatsArr, severStats, secondRecv, rtt2);
+            }catch (SocketTimeoutException t)
+            {
+                // no second packet, discard late packets, update packet statistics.
+                this.discardLateArrivedPacket(severStats);
+                this.update_pktStatsArr(pktStatsArr, severStats, firstRecv, rtt);
+            }catch (IOException io)
+            {
+                System.out.println("v1_dfp_rescue: IO error.");
+                System.out.println(io.getMessage());
+            }
+
+        }
+
+        if (pktStatsArr[0].getCountWithinWindowTime() <
+        pktStatsArr[1].getCountWithinWindowTime())
+        {
+            // the second packet has more counts fall in window time.
+            return 1;
+        }
+        if (pktStatsArr[0].getCountWithinWindowTime() >
+        pktStatsArr[1].getCountWithinWindowTime())
+        {
+            // the first packet has more counts fall in window time.
+            return 0;
+        }
+
+        // we failed to distinguish which one has more counts in window time.
+        return -1;
+    }
+
+    /** Helper method for v1_dfp_rescue:
+     * Help updating the two packet statistics, based on new received
+     *  packets and their round trip time.
+     * @param pktStatsArr array of packet statistics.
+     * @param severStats server statistics
+     * @param recvPkt a new received packets.
+     * @param rtt round trip time of the packet. */
+    private void update_pktStatsArr(AuthServerPacketStats[] pktStatsArr,
+                                    AuthSeverStats severStats,
+                                    DatagramPacket recvPkt,
+                                    int rtt)
+    {
+        for (int i = 0; i < pktStatsArr.length; i++)
+        {
+            if (pktStatsArr[i].isPacketBelongsToStats(recvPkt))
+            {
+                pktStatsArr[i].updateInWindowTimeCount(rtt, severStats);
+            }
+        }
     }
 
 

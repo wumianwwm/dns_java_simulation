@@ -107,4 +107,26 @@ public class AuthServerPacketStats
             this.countWithinWindowTime += 1;
         }
     }
+
+
+    /** Check if one packet comes from the same server,
+     *   has the same query name, as this packet statistics.
+     * @param packet a received datagram packet.
+     * @return true if the packet has the same info stats above.
+     *         false otherwise. */
+    public boolean isPacketBelongsToStats(DatagramPacket packet)
+    {
+        DNSMessage message = DNSMessage.getMessageFromPacket(packet);
+        String source_IP = packet.getAddress().getHostAddress();
+        String qName = message.getQueryName();
+        if (!qName.equals(this.queryName))
+        {
+            return false;
+        }
+        if (!source_IP.equals(this.server_address))
+        {
+            return false;
+        }
+        return true;
+    }
 }
