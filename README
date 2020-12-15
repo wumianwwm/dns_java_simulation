@@ -1,5 +1,5 @@
 
-Last edit: 2020 Dec 14th 5:35 PM
+Last edit: 2020 Dec 15th 2:46 PM
 
 These java files aim to provide simulation of a DNS client, a DNS server
 and an attacker that aims to cache poisoning the DNS client.
@@ -11,12 +11,15 @@ Topology setup: See project_mininet_v0.py.
     link between two switches has 15 Mbps bandwidth, 10 ms delay.
 
 **************** Experiment running guide: *****************
+Note: Makefile IS NOT WORKING AT THIS TIME. Use the following instructions:
+
 First: running floodlight VM, open a terminal, run following commands:
         cd floodlight
         ant #(If you haven't)
         java -jar /target/floodlight.jar
 
 Copy all project code to a directory, e.g. 00_04_project_repo/
+    onto floodlight VM's Desktop.
 
 Open another terminal, run following commands:
         cd Desktop/00_04_project_repo
@@ -213,4 +216,5 @@ Summary: Now we have implemented out version of dfp, further adjustment will
 
 Possible TODO:
     1. Make output to a text file;
-    2. adjust experiment setup;
+    2. Adjust experiment setup;
+    3. Fix Makefile if time allows.
