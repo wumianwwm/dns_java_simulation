@@ -113,9 +113,15 @@ public class Simple_DNS_Client {
         }
 
         String[] splitBaseName = this.splitBaseName(baseName);
+        System.out.println("Start packet sampling");
         AuthServerStats severStats = this.createServerStats(20, RecordType.A);
-        System.out.println("severStats estimatedRtt: " + severStats.getEstimatedRTT()
-        + " devRTT: " + severStats.getDevRTT());
+        System.out.println("Server statistics: estimated Round Trip Time(RTT): "
+                + severStats.getEstimatedRTT() + " ms");
+        System.out.println("Server statistics: RTT deviation: " +
+                severStats.getDevRTT() + " ms");
+        System.out.println(" ");
+        System.out.println("DNS Client: start processing queries");
+        System.out.println(" ");
 
         for (int i = 0; i < numQuery; i++)
         {
@@ -123,9 +129,11 @@ public class Simple_DNS_Client {
                     i);
             // send and receive dns message, version 1
 //            this.sendAndRecv_v0(queryName);
-            System.out.println("******** Round: " + i + " ********");
+            System.out.println("******** Round " + i +
+                     ": query name: " + queryName +" ********");
             this.sendAndRecv_v1(queryName, severStats);
-            System.out.println("********************");
+            System.out.println("********************************************");
+            System.out.println(" ");
             System.out.println(" ");
             System.out.println(" ");
         }
@@ -302,45 +310,54 @@ public class Simple_DNS_Client {
             recvTime2 = System.currentTimeMillis();
             rtt2 = (int) (recvTime2 - sendTime);
 
-            System.out.println("first received packet: ");
+            System.out.println("first received packet info: ");
             DNSMessage firstMsg = DNSMessage.getMessageFromPacket(firstRecv);
             this.printAnswersFromResponse(firstMsg, rtt);
 
-            System.out.println("second received packet: ");
+            System.out.println("second received packet info: ");
             DNSMessage secondMsg = DNSMessage.getMessageFromPacket(secondrecv);
             this.printAnswersFromResponse(secondMsg, rtt2);
-            //TODO: implement our imrpovments here.
+            // Create packet statistics.
             AuthServerPacketStats[] statsArr = this.createPacketStatsArray(queryName,
                     severStats, firstRecv, rtt, secondrecv, rtt2);
             switch (statsArr.length)
             {
                 case 0:
                     System.out.println("error: no packet is valid");
+                    System.out.println("final answer: " + queryName
+                            + " IP: failed to get IP");
                     break;
                 case 1:
-                    System.out.println("final answer:"+statsArr[0].getQueryName()
-                    + " " + statsArr[0].getIp_addresses()[0]);
+                    System.out.println("final answer: "+statsArr[0].getQueryName()
+                    + " IP:" + statsArr[0].getIp_addresses()[0]);
                     break;
             }
             // now we can for sure that, the packet statistics has two elements.
+            System.out.println("Two potential valid packets received. Start" +
+                    " rescue method.");
             int rv = this.v1_dfp_rescue(queryName, severStats, statsArr);
             switch (rv)
             {
                 case -1:
+                    System.out.println("Rescue method failed, cannot determine which " +
+                            "one is the valid packet.");
                     System.out.println(queryName + " IP: failed to get IP");
                     return;
                 case 0:
                     // we update server stats using the first rtt
-//                    System.out.println("Update server stats using " + rtt);
+                    System.out.println("Rescue method succeed, " +
+                            "update server stats using " + rtt);
                     severStats.updateSeverStats(rtt);
                     break;
                 case 1:
                     // we update server stats using the second rtt.
-//                    System.out.println("Update server stats using " + rtt2);
+                    System.out.println("Rescue method succeed, " +
+                            "update server stats using " + rtt2);
                     severStats.updateSeverStats(rtt2);
             }
             // print answer.
-            System.out.println(queryName + " IP: " + statsArr[rv].getIp_addresses()[0]);
+            System.out.println("final answer: " + queryName
+                    + " IP: " + statsArr[rv].getIp_addresses()[0]);
 
         }
         catch (SocketTimeoutException t)
@@ -348,14 +365,15 @@ public class Simple_DNS_Client {
             // we waits for some amount of time, no additional packets arrive.
             // The first packet is a valid one.
             recvTime2 = System.currentTimeMillis();
-            // since first one is valid, we update the server statistics here.
-            severStats.updateSeverStats(rtt);
             System.out.println("Socket time out! after " +
                     (recvTime2 - sendTime) + "ms we sent the first packet!");
             // now we print the first packet.
-            System.out.println("first received packet: ");
+            System.out.println("the only received packet: ");
             DNSMessage firstMsg = DNSMessage.getMessageFromPacket(firstRecv);
             this.printAnswersFromResponse(firstMsg, rtt);
+
+            System.out.println("Update server statistics using this packet rtt");
+            severStats.updateSeverStats(rtt);
 
             /** Notice from experiment:
              * The following results is observed from experiment.
@@ -696,7 +714,7 @@ public class Simple_DNS_Client {
             System.out.print(IPs[i]);
             System.out.print(" ");
         }
-        System.out.println(" RTT: " + rtt);
+        System.out.println(" RTT: " + rtt + " ms");
         System.out.println("----------------");
         System.out.println(" ");
     }
