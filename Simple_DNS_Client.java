@@ -289,17 +289,49 @@ public class Simple_DNS_Client {
         long recvTime2 = 0; // time when we receive the second packet.
         int rtt2 = 0; // round trip time for the second received packet.
 
+        // to consider packet loss, the client tries to send packet, waits for first response.
+        // If within 10 rounds, we still cannot receive a response for query, end this method.
+        int receiveFirstPktTrial = 1;
+        while (true)
+        {
+            try
+            {
+                // socket timeout might be altered by previous method calls,
+                //  we need to reset socket timeout here.
+                this.socket.setSoTimeout(2 * severStats.getEstimatedRTT());
+                this.socket.send(toAttacker);
+                sendTime = System.currentTimeMillis();
+                this.socket.send(toSever);
+                this.socket.receive(firstRecv);
+
+                // now we successfully received the first packet
+                recvTime = System.currentTimeMillis();
+                rtt = (int) (recvTime - sendTime);
+                break;
+            }
+            catch (SocketTimeoutException t)
+            {
+                // We failed to receive the first packet.
+                receiveFirstPktTrial += 1;
+                if (receiveFirstPktTrial >= 10)
+                {
+                    System.out.println("DNS Client: Frequent packet lose.");
+                    System.out.println("final answer: " + queryName
+                            + " IP:" + " failed to get IP");
+                    return;
+                }
+            }
+            catch (IOException io)
+            {
+                System.out.println("DNS Client: IO exception in sendAndRecv_v1 1");
+                System.out.println(io.getMessage());
+                return;
+            }
+        }
+
         try
         {
-            this.socket.setSoTimeout(0); // reset wait time.
-            this.socket.send(toAttacker);
-            sendTime = System.currentTimeMillis();
-            this.socket.send(toSever);
-            this.socket.receive(firstRecv);
-
-            recvTime = System.currentTimeMillis();
-            rtt = (int) (recvTime - sendTime);
-
+            // We have received the first packet.
             // now we calculate the time we need to wait for any more response
             int waitTime = severStats.getFullWindowTime(rtt);
             // set time out value, and waits for received message
@@ -309,55 +341,6 @@ public class Simple_DNS_Client {
             // we received a second packet!
             recvTime2 = System.currentTimeMillis();
             rtt2 = (int) (recvTime2 - sendTime);
-
-            System.out.println("first received packet info: ");
-            DNSMessage firstMsg = DNSMessage.getMessageFromPacket(firstRecv);
-            this.printAnswersFromResponse(firstMsg, rtt);
-
-            System.out.println("second received packet info: ");
-            DNSMessage secondMsg = DNSMessage.getMessageFromPacket(secondrecv);
-            this.printAnswersFromResponse(secondMsg, rtt2);
-            // Create packet statistics.
-            AuthServerPacketStats[] statsArr = this.createPacketStatsArray(queryName,
-                    severStats, firstRecv, rtt, secondrecv, rtt2);
-            switch (statsArr.length)
-            {
-                case 0:
-                    System.out.println("error: no packet is valid");
-                    System.out.println("final answer: " + queryName
-                            + " IP: failed to get IP");
-                    break;
-                case 1:
-                    System.out.println("final answer: "+statsArr[0].getQueryName()
-                    + " IP:" + statsArr[0].getIp_addresses()[0]);
-                    break;
-            }
-            // now we can for sure that, the packet statistics has two elements.
-            System.out.println("Two potential valid packets received. Start" +
-                    " rescue method.");
-            int rv = this.v1_dfp_rescue(queryName, severStats, statsArr);
-            switch (rv)
-            {
-                case -1:
-                    System.out.println("Rescue method failed, cannot determine which " +
-                            "one is the valid packet.");
-                    System.out.println(queryName + " IP: failed to get IP");
-                    return;
-                case 0:
-                    // we update server stats using the first rtt
-                    System.out.println("Rescue method succeed, " +
-                            "update server stats using " + rtt);
-                    severStats.updateSeverStats(rtt);
-                    break;
-                case 1:
-                    // we update server stats using the second rtt.
-                    System.out.println("Rescue method succeed, " +
-                            "update server stats using " + rtt2);
-                    severStats.updateSeverStats(rtt2);
-            }
-            // print answer.
-            System.out.println("final answer: " + queryName
-                    + " IP: " + statsArr[rv].getIp_addresses()[0]);
 
         }
         catch (SocketTimeoutException t)
@@ -388,14 +371,70 @@ public class Simple_DNS_Client {
              *  it will be extracted from socket's receive buffer, and used
              *  in the next round of comparison.*/
 
-            // call helper method to discard late arrive packets.
+            // discard any late arrive packets, then return.
             this.discardLateArrivedPacket(severStats);
+            return;
         }
         catch (IOException i)
         {
             System.out.println("DNS client: IO exception in sendAndRecv_v1");
             System.out.println(i.getMessage());
+            return;
         }
+
+        // When code reaches here, we have received two responses for one query.
+        System.out.println("How many times we send query: " + receiveFirstPktTrial);
+        System.out.println("first received packet info: ");
+        DNSMessage firstMsg = DNSMessage.getMessageFromPacket(firstRecv);
+        this.printAnswersFromResponse(firstMsg, rtt);
+        System.out.println("second received packet info: ");
+        DNSMessage secondMsg = DNSMessage.getMessageFromPacket(secondrecv);
+        this.printAnswersFromResponse(secondMsg, rtt2);
+
+        // Create packet statistics.
+        AuthServerPacketStats[] statsArr = this.createPacketStatsArray(queryName,
+                severStats, firstRecv, rtt, secondrecv, rtt2);
+        switch (statsArr.length)
+        {
+            case 0:
+                System.out.println("error: no packet is valid");
+                System.out.println("final answer: " + queryName
+                        + " IP: failed to get IP");
+                return;
+            case 1:
+                System.out.println("Only one packet is valid.");
+                System.out.println("final answer: "+statsArr[0].getQueryName()
+                        + " IP:" + statsArr[0].getIp_addresses()[0]);
+                // TODO: update server statistics here.
+                return;
+        }
+
+        // now we can for sure that, the packet statistics has two elements.
+        System.out.println("Two potential valid packets received. Start" +
+                " rescue method.");
+        int rv = this.v1_dfp_rescue(queryName, severStats, statsArr);
+        switch (rv)
+        {
+            case -1:
+                System.out.println("Rescue method failed, cannot determine which " +
+                        "one is the valid packet.");
+                System.out.println(queryName + " IP: failed to get IP");
+                return;
+            case 0:
+                // we update server stats using the first rtt
+                System.out.println("Rescue method succeed, " +
+                        "update server stats using " + rtt);
+                severStats.updateSeverStats(rtt);
+                break;
+            case 1:
+                // we update server stats using the second rtt.
+                System.out.println("Rescue method succeed, " +
+                        "update server stats using " + rtt2);
+                severStats.updateSeverStats(rtt2);
+        }
+        // print answer.
+        System.out.println("final answer: " + queryName
+                + " IP: " + statsArr[rv].getIp_addresses()[0]);
     }
 
     /** Helper method: create a Datagram Packet, which
