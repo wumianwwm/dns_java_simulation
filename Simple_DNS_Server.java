@@ -83,7 +83,7 @@ public class Simple_DNS_Server
             // set time out to 15 seconds.
             // If within 15 seconds, no UDP packets are received, a
             //  SocketTimeoutException will be thrown.
-            this.socket.setSoTimeout(15000);
+            this.socket.setSoTimeout(35000);
         }catch (SocketException s) {
             System.out.println("Simple_DNS_Server: socket " + s.getMessage());
             this.socket = null;

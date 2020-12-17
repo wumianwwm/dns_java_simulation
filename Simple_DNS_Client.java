@@ -1,4 +1,7 @@
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -112,6 +115,18 @@ public class Simple_DNS_Client {
             System.exit(0);
         }
 
+        PrintStream originalOut = System.out;
+        try
+        {
+            PrintStream outputStream = new PrintStream(
+                    new FileOutputStream("00_output.txt"));
+            System.setOut(outputStream);
+        }catch (FileNotFoundException f)
+        {
+            System.out.println("client: failed to set output.");
+            System.out.println(f.getMessage());
+        }
+
         String[] splitBaseName = this.splitBaseName(baseName);
         System.out.println("Start packet sampling");
         AuthServerStats severStats = this.createServerStats(20, RecordType.A);
@@ -138,6 +153,8 @@ public class Simple_DNS_Client {
             System.out.println(" ");
         }
         // close the socket
+        System.setOut(originalOut);
+        System.out.println("End of client running process");
         this.socket.close();
     }
 
@@ -491,7 +508,7 @@ public class Simple_DNS_Client {
             try
             {
                 // set time out; prepare packet for receiving data
-                this.socket.setSoTimeout(5000);
+                this.socket.setSoTimeout(300);
                 byte[] buffer = new byte[1024];
                 DatagramPacket recvPacket = new DatagramPacket(buffer, buffer.length);
                 // send and receive packets.

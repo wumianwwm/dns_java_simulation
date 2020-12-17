@@ -17,7 +17,10 @@
 
 // 2020 Dec 2nd, test commit
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.*;
 import java.util.*;
 
@@ -335,6 +338,25 @@ public class Simple_Java_Udp {
         }
     }
 
+    /** Test save print line to a file.*/
+    public static void testSaveOutput()
+    {
+        PrintStream originalOut = System.out;
+        try {
+            PrintStream saveOutPut = new PrintStream(new FileOutputStream("00_test.txt"));
+            System.out.println("set output to a file.");
+            System.setOut(saveOutPut);
+            System.out.println("Test: this line will be saved to 00_test.txt");
+            System.setOut(originalOut);
+            System.out.println("This line will be appear on command line.");
+        }catch (FileNotFoundException f)
+        {
+            System.out.println("File not found.");
+            System.out.println(f.getMessage());
+        }
+    }
+
+
     public static void main(String[] args) {
 
         Simple_Java_Udp udpPlay = new Simple_Java_Udp();
@@ -345,6 +367,7 @@ public class Simple_Java_Udp {
         {
 //            Simple_Java_Udp.testEncodeDecode("www.uwo.ca");
             Simple_Java_Udp.testSocketTimeOut(10);
+//            Simple_Java_Udp.testSaveOutput();
             System.exit(0);
         }
 
@@ -394,7 +417,7 @@ public class Simple_Java_Udp {
             // args[4]: attacker's Port
             Simple_DNS_Client client = new Simple_DNS_Client(args[1],
                     args[2], args[3], args[4]);
-            client.running_client("www.uwo.ca", 20);
+            client.running_client("www.uwo.ca", 25);
             System.exit(0);
         }
 
