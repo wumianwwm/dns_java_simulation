@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
@@ -14,9 +15,11 @@ public class Simple_DNS_Client {
     private Random random; // used for generating random query ID.
     private InetAddress server_addr; // IP address of server
     private int server_port; // port of server waits for connection.
-
     private InetAddress attacker_addr; // IP address of attacker
     private int attackerPort; // port of attacker
+    // variables used for experiment purpose
+    // String: IP address, Int: how many times that IP been used as an answer to a query.
+    private HashMap<String, Integer> experimentResults;
 
     /** Constructor:*/
     public Simple_DNS_Client(String sever_IP, String severPort,
@@ -31,6 +34,7 @@ public class Simple_DNS_Client {
             this.socket = null;
         }
         this.random = new Random();
+        this.experimentResults = new HashMap<>();
     }
 
 
@@ -151,6 +155,12 @@ public class Simple_DNS_Client {
             System.out.println(" ");
             System.out.println(" ");
             System.out.println(" ");
+        }
+        System.out.println("**** Experiment Results Summary ****");
+        for (String s: this.experimentResults.keySet())
+        {
+            System.out.println("IP: " + s + " counts: " +
+                    this.experimentResults.get(s));
         }
         // close the socket
         System.setOut(originalOut);
@@ -374,6 +384,12 @@ public class Simple_DNS_Client {
 
             System.out.println("Update server statistics using this packet rtt");
             severStats.updateSeverStats(rtt);
+            // update experiment results.
+            String[] ips = firstMsg.retrieveDNSAnswers(queryName,
+                    RecordType.getByCode(firstMsg.getQType()));
+            // TODO: Check, encounter one index out of bound here, but only once.
+            System.out.println("One packet: update experiment result using: " + ips[0]);
+            this.updateExperimentResults(ips[0]);
 
             /** Notice from experiment:
              * The following results is observed from experiment.
@@ -422,6 +438,7 @@ public class Simple_DNS_Client {
                 System.out.println("Only one packet is valid.");
                 System.out.println("final answer: "+statsArr[0].getQueryName()
                         + " IP:" + statsArr[0].getIp_addresses()[0]);
+                this.updateExperimentResults(statsArr[0].getIp_addresses()[0]);
                 // TODO: update server statistics here.
                 return;
         }
@@ -430,24 +447,35 @@ public class Simple_DNS_Client {
         System.out.println("Two potential valid packets received. Start" +
                 " rescue method.");
         int rv = this.v1_dfp_rescue(queryName, severStats, statsArr);
+//        System.out.println("statsArr0: " + statsArr[0].getIp_addresses()[0]);
+//        System.out.println("statsArr1: " + statsArr[1].getIp_addresses()[0]);
+//        System.out.println("rv value: " + rv);
         switch (rv)
         {
             case -1:
                 System.out.println("Rescue method failed, cannot determine which " +
                         "one is the valid packet.");
                 System.out.println(queryName + " IP: failed to get IP");
+                // 0.0.0.0 means we can't distinguish between 2 potential valid IPs.
+                this.updateExperimentResults("0.0.0.0");
                 return;
             case 0:
                 // we update server stats using the first rtt
                 System.out.println("Rescue method succeed, " +
                         "update server stats using " + rtt);
                 severStats.updateSeverStats(rtt);
+                System.out.println("Update experiment result using: " +
+                        statsArr[0].getIp_addresses()[0]);
+                this.updateExperimentResults(statsArr[0].getIp_addresses()[0]);
                 break;
             case 1:
                 // we update server stats using the second rtt.
                 System.out.println("Rescue method succeed, " +
                         "update server stats using " + rtt2);
                 severStats.updateSeverStats(rtt2);
+                System.out.println("Update experiment result using: " +
+                        statsArr[1].getIp_addresses()[0]);
+                this.updateExperimentResults(statsArr[1].getIp_addresses()[0]);
         }
         // print answer.
         System.out.println("final answer: " + queryName
@@ -773,5 +801,19 @@ public class Simple_DNS_Client {
         System.out.println(" RTT: " + rtt + " ms");
         System.out.println("----------------");
         System.out.println(" ");
+    }
+
+    /** Helper method for updating experimental results.
+     * Takes the IP address we get for one query, update the experiment results.
+     * @param IPfromServer ip address we obtained from DNS response.*/
+    private void updateExperimentResults(String IPfromServer)
+    {
+        Integer count = this.experimentResults.get(IPfromServer);
+        if (count != null)
+        {
+            this.experimentResults.put(IPfromServer,count+1);
+            return;
+        }
+        this.experimentResults.put(IPfromServer, 1);
     }
 }
