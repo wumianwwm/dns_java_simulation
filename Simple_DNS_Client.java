@@ -125,6 +125,7 @@ public class Simple_DNS_Client {
             PrintStream outputStream = new PrintStream(
                     new FileOutputStream("00_output.txt"));
             System.setOut(outputStream);
+            System.setOut(originalOut); // debug purpose...
         }catch (FileNotFoundException f)
         {
             System.out.println("client: failed to set output.");
@@ -345,6 +346,8 @@ public class Simple_DNS_Client {
                     System.out.println("DNS Client: Frequent packet lose.");
                     System.out.println("final answer: " + queryName
                             + " IP:" + " failed to get IP");
+                    // 255.255.255.255 - error outside the scope of out DFP algorithm.
+                    this.updateExperimentResults("255.255.255.255");
                     return;
                 }
             }
@@ -377,6 +380,7 @@ public class Simple_DNS_Client {
             recvTime2 = System.currentTimeMillis();
             System.out.println("Socket time out! after " +
                     (recvTime2 - sendTime) + "ms we sent the first packet!");
+            System.out.println("How many times we send query?: " + receiveFirstPktTrial);
             // now we print the first packet.
             System.out.println("the only received packet: ");
             DNSMessage firstMsg = DNSMessage.getMessageFromPacket(firstRecv);
@@ -386,10 +390,19 @@ public class Simple_DNS_Client {
             severStats.updateSeverStats(rtt);
             // update experiment results.
             String[] ips = firstMsg.retrieveDNSAnswers(queryName,
-                    RecordType.getByCode(firstMsg.getQType()));
-            // TODO: Check, encounter one index out of bound here, but only once.
-            System.out.println("One packet: update experiment result using: " + ips[0]);
-            this.updateExperimentResults(ips[0]);
+                    RecordType.getByCode(firstMsg.getQType() & 0xFFFF));
+            if (ips.length == 0)
+            {
+                System.out.println("One packet: error: no matched IP address.");
+                firstMsg.printDNSMessage();
+                this.updateExperimentResults("255.255.255.255");
+            }
+            if (ips.length > 0)
+            {
+                // TODO: Check, encounter one index out of bound here, but only once.
+                System.out.println("One packet: update experiment result using: " + ips[0]);
+                this.updateExperimentResults(ips[0]);
+            }
 
             /** Notice from experiment:
              * The following results is observed from experiment.
@@ -433,6 +446,7 @@ public class Simple_DNS_Client {
                 System.out.println("error: no packet is valid");
                 System.out.println("final answer: " + queryName
                         + " IP: failed to get IP");
+                this.updateExperimentResults("255.255.255.255");
                 return;
             case 1:
                 System.out.println("Only one packet is valid.");
@@ -645,7 +659,7 @@ public class Simple_DNS_Client {
         int rtt2 = 0; // round trip time for the second received packet.
         int waitTime = 0; // time to wait for second packet.
 
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 5;)
         {
             queryId = this.random.nextInt(65535);
             DatagramPacket toAttacker = this.createSendPacket(queryName,
@@ -657,14 +671,15 @@ public class Simple_DNS_Client {
             // we try to receive the first packet.
             try
             {
-                // set wait time to 30 seconds, if no packets come back, its lost.
-                this.socket.setSoTimeout(300000);
+                // set wait time to 2*estimatedRTT, if no packets come back, its lost.
+                this.socket.setSoTimeout(2 * severStats.getEstimatedRTT());
                 this.socket.send(toAttacker);
                 sendTime = System.currentTimeMillis();
                 this.socket.send(toSever);
                 this.socket.receive(firstRecv);
                 recvTime = System.currentTimeMillis();
                 rtt = (int) (recvTime - sendTime);
+                i += 1; // we get at least one response, count as 1 success re-send.
             }catch (SocketTimeoutException t)
             {
                 // we lost the first received packet.
@@ -756,9 +771,9 @@ public class Simple_DNS_Client {
         {
             try
             {
-                // we try to set socket time out value to be estimated
+                // we set socket time out value to be 4 * estimated
                 //  round trip time between client/server.
-                this.socket.setSoTimeout(severStats.getEstimatedRTT());
+                this.socket.setSoTimeout(4 * severStats.getEstimatedRTT());
                 // now see if any late packets arrived.
                 this.socket.receive(recvPacket);
             }catch (SocketTimeoutException t)
