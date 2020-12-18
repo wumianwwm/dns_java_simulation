@@ -400,6 +400,14 @@ public class Simple_DNS_Client {
             System.out.println("the only received packet: ");
             DNSMessage firstMsg = DNSMessage.getMessageFromPacket(firstRecv);
             this.printAnswersFromResponse(firstMsg, rtt);
+            if (firstMsg.getQueryId() != queryId)
+            {
+                // the query ID is not matched, this response is invalid.
+                System.out.println("One packet: error: query ID unmatched.");
+                this.updateExperimentResults("255.255.255.255");
+                this.discardLateArrivedPacket(severStats);
+                return;
+            }
 
             // update experiment results.
             String[] ips = firstMsg.retrieveDNSAnswers(queryName,
@@ -453,8 +461,18 @@ public class Simple_DNS_Client {
         this.printAnswersFromResponse(secondMsg, rtt2);
 
         // Create packet statistics.
-        AuthServerPacketStats[] statsArr = this.createPacketStatsArray(queryName,
-                severStats, firstRecv, rtt, secondrecv, rtt2);
+        DNSMessage[] messages = new DNSMessage[2];
+        messages[0] = firstMsg;
+        messages[1] = secondMsg;
+        InetAddress[] source_addrs = new InetAddress[2];
+        source_addrs[0] = firstRecv.getAddress();
+        source_addrs[1] = secondrecv.getAddress();
+        int[] rtts = new int[2];
+        rtts[0] = rtt;
+        rtts[1] = rtt2;
+        AuthServerPacketStats[] statsArr = this.createPacketStatsArray(queryId,
+                queryName, severStats, messages, source_addrs, rtts);
+
         switch (statsArr.length)
         {
             case 0:
@@ -595,52 +613,45 @@ public class Simple_DNS_Client {
      * Given the two datagram packets received, check if they are
      *  responses to the domain name in query sent from client.
      *
+     * @param qId query ID
      * @param queryName domain name sent in query.
-     * @param severStats  authoritative server statistics
-     * @param firstReceived the first received datagram packet.
-     * @param rtt1 round trip time of the first packet.
-     * @param secondReceived the second received datagram packet.
-     * @param rtt2 round trip time of the second packet.
-     *
+     * @param serverStats  authoritative server statistics
+     * @param messages array contains 2 DNS messages, first message from first packet.
+     *                  second message from the second packet.
+     * @param source_addrs array contains 2 InetAddress, same rule as above.
+     * @param rtts array contains 2 integers, same rule as above.
      * @return an array of AuthServerPacketStats.
      *  May be 0, 1, or 2 element.
      *  The first one will always created from the first packet.
      *  The second one will always created from the second packet. */
     private AuthServerPacketStats[] createPacketStatsArray(
-            String queryName, AuthServerStats severStats,
-            DatagramPacket firstReceived, int rtt1,
-            DatagramPacket secondReceived, int rtt2)
+            int qId,String queryName, AuthServerStats serverStats,
+            DNSMessage[] messages, InetAddress[] source_addrs,
+            int[] rtts)
     {
-        AuthServerPacketStats firstPacketStat = new AuthServerPacketStats(firstReceived,
-                severStats, rtt1);
-        AuthServerPacketStats secondPacketStat = new AuthServerPacketStats(secondReceived,
-                severStats, rtt2);
-
-        String firstPktServerAddr = firstPacketStat.getServer_address();
-        String secondPktServerAddr = secondPacketStat.getServer_address();
-        if (firstPktServerAddr.equals(secondPktServerAddr))
-        {
-            // if two packets come from the same source, some error occurs.
-            return new AuthServerPacketStats[0];
-        }
-
+        AuthServerPacketStats firstPktStats = new AuthServerPacketStats(
+                messages[0], source_addrs[0], serverStats, rtts[0]);
+        AuthServerPacketStats secondPktStats = new AuthServerPacketStats(
+                messages[1], source_addrs[1], serverStats, rtts[1]);
         List<AuthServerPacketStats> statsList = new ArrayList<>();
-        if (firstPacketStat.getQueryName().equals(queryName))
+
+        if (firstPktStats.isStatsHasValidIdAndName(qId, queryName))
         {
-            statsList.add(firstPacketStat);
+            statsList.add(firstPktStats);
         }
-        if (secondPacketStat.getQueryName().equals(queryName))
+        if (secondPktStats.isStatsHasValidIdAndName(qId, queryName))
         {
-            statsList.add(secondPacketStat);
-        }
-        int elementCount = statsList.size();
-        AuthServerPacketStats[] statsArray = new AuthServerPacketStats[elementCount];
-        for (int i = 0; i < elementCount; i++)
-        {
-            statsArray[i] = statsList.get(i);
+            statsList.add(secondPktStats);
         }
 
-        return statsArray;
+        int listSize = statsList.size();
+        AuthServerPacketStats[] packetStatsArr = new AuthServerPacketStats[listSize];
+        for (int i = 0; i < listSize; i++)
+        {
+            packetStatsArr[i] = statsList.get(i);
+        }
+
+        return packetStatsArr;
     }
 
 

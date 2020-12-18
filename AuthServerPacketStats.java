@@ -163,4 +163,23 @@ public class AuthServerPacketStats
         }
         return true;
     }
+
+
+    /** Check if this packet statistics has valid query ID and query domain name.
+     * @param queryId id used in client's sent DNS header.
+     * @param qName domain name is client's sent DNS question.
+     * @return true of id and query domain name matches. */
+    public boolean isStatsHasValidIdAndName(int queryId, String qName)
+    {
+        if (this.id_from_header != queryId)
+        {
+            return false;
+        }
+        if (!this.queryName.equals(qName))
+        {
+            return false;
+        }
+
+        return true;
+    }
 }
