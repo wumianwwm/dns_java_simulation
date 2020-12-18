@@ -41,25 +41,6 @@ public class Simple_DNS_Client {
 
 
     /** Helper method:
-     *set timeout value for socket.*/
-    public void setSocketTimeOut(int timeOut)
-    {
-        if (this.socket == null)
-        {
-            System.out.println("Simple_DNS_Client: socket is null. "
-            + "Can't set timeout.");
-            return;
-        }
-
-        try {
-            this.socket.setSoTimeout(timeOut);
-        }catch (SocketException s) {
-            System.out.println("Simple_DNS_Client: cannot set timeout.");
-            System.out.println(s.getMessage());
-        }
-    }
-
-    /** Helper method:
      * create InetAddress based on server_IP, attacker_IP.
      * @param server_IP IP address, in string format, of server.
      * @param attacker_IP IP address, in string format, of attacker
@@ -486,7 +467,8 @@ public class Simple_DNS_Client {
                 System.out.println("final answer: "+statsArr[0].getQueryName()
                         + " IP:" + statsArr[0].getIp_addresses()[0]);
                 this.updateExperimentResults(statsArr[0].getIp_addresses()[0]);
-                // TODO: update server statistics here.
+                // when create the stats, we update the countWithinWindowTime already,
+                //  no need to update packet stats again.
                 return;
         }
 
