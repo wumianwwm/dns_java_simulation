@@ -20,6 +20,7 @@ public class Simple_DNS_Client {
     // variables used for experiment purpose
     // String: IP address, Int: how many times that IP been used as an answer to a query.
     private HashMap<String, Integer> experimentResults;
+    private long totalTime; // client total execution time for processing queries.
 
     /** Constructor:*/
     public Simple_DNS_Client(String sever_IP, String severPort,
@@ -35,6 +36,7 @@ public class Simple_DNS_Client {
         }
         this.random = new Random();
         this.experimentResults = new HashMap<>();
+        this.totalTime = 0;
     }
 
 
@@ -125,7 +127,7 @@ public class Simple_DNS_Client {
             PrintStream outputStream = new PrintStream(
                     new FileOutputStream("00_output.txt"));
             System.setOut(outputStream);
-            System.setOut(originalOut); // debug purpose...
+//            System.setOut(originalOut); // debug purpose...
         }catch (FileNotFoundException f)
         {
             System.out.println("client: failed to set output.");
@@ -151,13 +153,23 @@ public class Simple_DNS_Client {
 //            this.sendAndRecv_v0(queryName);
             System.out.println("******** Round " + i +
                      ": query name: " + queryName +" ********");
+            long before_v1 = System.currentTimeMillis();
             this.sendAndRecv_v1(queryName, severStats);
+            long after_v1 = System.currentTimeMillis();
+            long v1_execution_time = after_v1 - before_v1;
+            this.totalTime += v1_execution_time;
             System.out.println("********************************************");
             System.out.println(" ");
             System.out.println(" ");
             System.out.println(" ");
         }
         System.out.println("**** Experiment Results Summary ****");
+        double average_v1_time = ((double) this.totalTime) / 25 ;
+        System.out.println(" ");
+        System.out.println("Average time to lookup one domain name: "
+                + average_v1_time + " ms");
+        System.out.println(" ");
+        System.out.println("IP addresses client thinks are valid:");
         for (String s: this.experimentResults.keySet())
         {
             System.out.println("IP: " + s + " counts: " +
@@ -355,6 +367,9 @@ public class Simple_DNS_Client {
             {
                 System.out.println("DNS Client: IO exception in sendAndRecv_v1 1");
                 System.out.println(io.getMessage());
+                System.out.println("final answer: " + queryName
+                        + " IP:" + " failed to get IP");
+                this.updateExperimentResults("255.255.255.255");
                 return;
             }
         }
@@ -376,7 +391,7 @@ public class Simple_DNS_Client {
         catch (SocketTimeoutException t)
         {
             // we waits for some amount of time, no additional packets arrive.
-            // The first packet is a valid one.
+            // The packet is valid if it matches the query client sent.
             recvTime2 = System.currentTimeMillis();
             System.out.println("Socket time out! after " +
                     (recvTime2 - sendTime) + "ms we sent the first packet!");
@@ -386,20 +401,20 @@ public class Simple_DNS_Client {
             DNSMessage firstMsg = DNSMessage.getMessageFromPacket(firstRecv);
             this.printAnswersFromResponse(firstMsg, rtt);
 
-            System.out.println("Update server statistics using this packet rtt");
-            severStats.updateSeverStats(rtt);
             // update experiment results.
             String[] ips = firstMsg.retrieveDNSAnswers(queryName,
                     RecordType.getByCode(firstMsg.getQType() & 0xFFFF));
             if (ips.length == 0)
             {
+                // This is usually cause by received packet's is a response to
+                //  another query packet sent by client.
                 System.out.println("One packet: error: no matched IP address.");
                 firstMsg.printDNSMessage();
                 this.updateExperimentResults("255.255.255.255");
             }
             if (ips.length > 0)
             {
-                // TODO: Check, encounter one index out of bound here, but only once.
+                // the response packet's query name and type matches client's sent query.
                 System.out.println("One packet: update experiment result using: " + ips[0]);
                 this.updateExperimentResults(ips[0]);
             }
