@@ -1,4 +1,5 @@
 import java.net.DatagramPacket;
+import java.net.InetAddress;
 
 /** Represents the packet statistics.
  *
@@ -26,8 +27,37 @@ public class AuthServerPacketStats
     private String queryName;
     // answers (e.g. IP addresses) of that domain name
     private String[] ip_addresses;
-    // count how many times, the responses fall in window time.
+    // count how many times, the matched responses fall in window time.
+    //  Matched response: DNS response come from same server, contain same
+    //  query name in DNS question section.
     private int countWithinWindowTime = 0;
+    // the ID in DNS response header field. Used to verify if the packet that
+    //  used to create this object is expected - i.e. query ID matches the client
+    //  previously sent DNS query's header ID.
+    private int id_from_header;
+
+    /** Alternative constructor: use a DNS Message decoded from a packet,
+     *      to construct a packet statistics
+     * @param responseMsg the datagram packet we received.
+     * @param source_addr source of the packet.
+     * @param serverStats Authoritative server statistics.
+     * @param rtt round trip time of that DNS message.*/
+    public AuthServerPacketStats(DNSMessage responseMsg,
+                                 InetAddress source_addr,
+                                 AuthServerStats serverStats,
+                                 int rtt)
+    {
+        this.server_address = source_addr.getHostAddress();
+        this.queryName = responseMsg.getQueryName();
+        RecordType qType = RecordType.getByCode(responseMsg.getQType() & 0xFFFF);
+        this.ip_addresses = responseMsg.retrieveDNSAnswers(this.queryName, qType);
+        this.id_from_header = responseMsg.getQueryId();
+
+        if (!serverStats.isEarlyPacket(rtt))
+        {
+            this.countWithinWindowTime = 1;
+        }
+    }
 
     /** Constructor:
      * Create an authoritative packet statistics object,
@@ -80,6 +110,12 @@ public class AuthServerPacketStats
     public int getCountWithinWindowTime()
     {
         return this.countWithinWindowTime;
+    }
+
+    /** Helper method to get query ID */
+    public int getId_from_header()
+    {
+        return this.id_from_header;
     }
 
 
