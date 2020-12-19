@@ -704,7 +704,7 @@ public class Simple_DNS_Client {
             {
                 System.out.println("v1_dfp_rescue: IO error.");
                 System.out.println(io.getMessage());
-                continue;
+                break;
             }
             // we try to receive the second packet
             try
@@ -727,6 +727,7 @@ public class Simple_DNS_Client {
             {
                 System.out.println("v1_dfp_rescue: IO error.");
                 System.out.println(io.getMessage());
+                break;
             }
 
         }
