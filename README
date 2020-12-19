@@ -1,5 +1,5 @@
 
-Last edit: 2020 Dec 19th 2:03 PM
+Last edit: 2020 Dec 19th 4:43 PM
 
 These java files aim to provide simulation of a DNS client, a DNS server
 and an attacker that aims to cache poisoning the DNS client.
@@ -42,6 +42,13 @@ Now go back to h2 FIRST, run it. THEN go back to h1, run it.
 Client's output will be saved in a file "output.txt", if we need to re-run
     the experiment, but save the current output, rename the "output.txt" or more
     it to another directory.
+
+To adjust network setting, go to project_mininet_v0.py, you can change settings like
+    packet loss rate there.
+
+To adjust client DFP re-send query times, go to Simple_DNS_Client -> v1_dfp_rescue(),
+    by changing the for loop execution condition(e.g, from i<5 to i<1), we can adjust
+    how many times the method re-send query, and update packet statistics.
 
 Notice for error:
     Based on our settings, the estimated Round Trip Time (RTT) between h1(DNS Client)
