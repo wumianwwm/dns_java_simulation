@@ -19,6 +19,13 @@ public class Simple_DNS_Client {
     private int attackerPort; // port of attacker
     // variables used for experiment purpose
     // String: IP address, Int: how many times that IP been used as an answer to a query.
+    /** Special IP addresses and their meaning:
+     * 0.0.0.0. - The client sends one query, get 2 response with matched query ID, and
+     *  domain name. The client runs rescue method, but failed to figure out which one
+     *  of the responses come from actual server.
+     *
+     * 255.255.255.255 - The client failed to get IP address for a domain name. This is
+     *  due to some error outside the control of refined DFP nor the client. */
     private HashMap<String, Integer> experimentResults;
     private long totalTime; // client total execution time for processing queries.
 

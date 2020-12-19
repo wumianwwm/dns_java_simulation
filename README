@@ -1,5 +1,5 @@
 
-Last edit: 2020 Dec 15th 2:46 PM
+Last edit: 2020 Dec 19th 2:03 PM
 
 These java files aim to provide simulation of a DNS client, a DNS server
 and an attacker that aims to cache poisoning the DNS client.
@@ -11,8 +11,6 @@ Topology setup: See project_mininet_v0.py.
     link between two switches has 15 Mbps bandwidth, 10 ms delay.
 
 **************** Experiment running guide: *****************
-Note: Makefile IS NOT WORKING AT THIS TIME. Use the following instructions:
-
 First: running floodlight VM, open a terminal, run following commands:
         cd floodlight
         ant #(If you haven't)
@@ -22,25 +20,34 @@ Copy all project code to a directory, e.g. 00_04_project_repo/
     onto floodlight VM's Desktop.
 
 Open another terminal, run following commands:
-        cd Desktop/00_04_project_repo
-        rm -rf *.class
-        javac Simple_Java_Udp.java
-        sudo mn -c #(If need password, it is "floodlight")
+        sudo mn -c (password is "floodlight")
+        make clean
+        make
         sudo python project_mininet_v0.py
 
 Now mininet should start running, run following command:
         xterm h1 h2 h3
 
 On h1's terminal, type following command (do not press "enter" yet):
-        java Simple_Java_Udp dnsClient 10.0.0.3 12345 10.0.0.2 23456
+        java -jar SimpleDNSSimulation.jar dnsClient 10.0.0.3 12345 10.0.0.2 23456
 
 On h2's terminal, type following command (do not press "enter yet)":
-        java Simple_Java_Udp dnsAttacker 10.0.0.2 23456
+        java -jar SimpleDNSSimulation.jar dnsAttacker 10.0.0.2 23456
 
 On h3's terminal, type following command, and run it
-        java Simple_Java_Udp dnsServer 10.0.0.3 12345
+        java -jar SimpleDNSSimulation.jar dnsServer 10.0.0.3 12345
 
 Now go back to h2 FIRST, run it. THEN go back to h1, run it.
+
+Client's output will be saved in a file "output.txt", if we need to re-run
+    the experiment, but save the current output, rename the "output.txt" or more
+    it to another directory.
+
+Notice for error:
+    Based on our settings, the estimated Round Trip Time (RTT) between h1(DNS Client)
+    and h3(DNS Server) should be close to 130 - 140 ms. Sometimes, if the
+    estimated RTT is much less than 100 ms, something goes wrong with mininet, we need
+    to re-run the experiment, and discard the experimental results for that round.
 ************************************************************
 
 
@@ -166,16 +173,9 @@ The code can build a DNS response message based on the query. You can add more
     authorities(name servers), or additional section.
     DO NOT USE OTHER RECORD TYPE.
 
-In Simple_java_Udp, check testEncodeDecode() method. That
-    method provides some examples about how to use the methods.
-
-Where to begin with:
-
-I suggest you use an IDE to build a project, so that you can follow the call trace.
-You can start looking at DNSMessage. The comments should be very helpful.
-
-Also, go to the Simple_Java_Udp.java file, there are some example usages inside the
-main() method and testEncodeDecode..
+In Simple_java_Udp, check testEncodeDecode() method.
+That method provides some examples about how to use DNSMessage's methods to encode
+    or decode a DNS query/response message.
 -----------------------------------------------------------------------------------
 
 
@@ -202,19 +202,20 @@ NOTE: Please check "Guide and Experiment Setup: Simple_DNS_Client/Server".
 --------------------------------------------------------------------------------
 
 
-// for reference purpose, if needed.
+---------------------- for Reference Purpose, If Needed. ----------------------
 Some of the code are referenced from Wumian Wang's previous project, which
 built a simple DNS resolver that can encode a DNS packet, send to a DNS server,
 receive DNS response message and decode it.
 
-Here we acknowledge that method for encoding and decoding a DNS message
-are adapted from the previous work's framework.
--------------------
+Here we acknowledge that methods for encoding a DNS query message, and decoding
+a DNS response message, are adapted from previous project framework.
+
+Framework used in this project supports encoding a DNS response, which has same
+format as those responses from real-world DNS authority name servers.
+
+For simplicity, DNS responses encoded in our Simple_DNS_Server will only have
+1 type A Resource Record in Answer section, no Resource Records in other 2 sections.
+-------------------------------------------------------------------------------
 
 Summary: Now we have implemented out version of dfp, further adjustment will
     based on experiment requirements.
-
-Possible TODO:
-    1. Make output to a text file;
-    2. Adjust experiment setup;
-    3. Fix Makefile if time allows.
