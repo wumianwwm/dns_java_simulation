@@ -1,5 +1,5 @@
 
-Last edit: 2020 Dec 19th 4:43 PM
+Last edit: 2020 Dec 20th 1:01 PM
 
 These java files aim to provide simulation of a DNS client, a DNS server
 and an attacker that aims to cache poisoning the DNS client.
@@ -36,6 +36,18 @@ On h2's terminal, type following command (do not press "enter yet)":
 
 On h3's terminal, type following command, and run it
         java -jar SimpleDNSSimulation.jar dnsServer 10.0.0.3 12345
+
+Note:
+    * Based on our mininet setting, h3 IP address is 10.0.0.3; h2 IP address
+        is 10.0.0.2.
+    * dnsClient/dnsAttacker/dnsServer are not case sensitive.
+    * "12345" and "23456" are port number which client will send queries to.
+        I suggest to use some number between 10000 - 65534.
+    * For h1, the arguments format is
+        "dnsClient   server-IP   server-Port   attacker-IP   attacker-Port"
+
+   ** However, the client use ONLY round trip time to determine if a packet
+        is from server or attacker. See below notes in Simple_DNS_Client.
 
 Now go back to h2 FIRST, run it. THEN go back to h1, run it.
 
@@ -96,6 +108,13 @@ The client then waits for response, if one response received, client waits for
     window time, calculated from server statistics. If another packet arrives,
     run our version of dfp_rescue method. To see which one of the packet comes
     from server.
+
+To implement our simulation, when the client first send query, it sends one
+    to server, one to attacker.
+However, when it receives queries, it won't allow to use the source IP address of
+    packet to determine whether a packet is from server or attacker.
+In other words, when client receives packet, it can only use our refined DFP algorithm
+    to check whether a packet is from server or not.
 ************************************************************
 ------------- Guide and Experiment Setup: Simple_DNS_Client/Sever ---------------
 ---------------------------------------------------------------------------------
