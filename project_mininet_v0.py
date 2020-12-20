@@ -2,9 +2,9 @@
 
 # Python script for a simulated network:
 # Build a mininet topology with 3 hosts, 5 switches, and a remote floodlight controller.
-# Links have bandwidth 15Mbps, latency 1ms, packet loss 1%
+# Links between a host and a switch: 15 Mbps bandwidth, 1  ms latency, no packet loss.
+# Links between 2 switches:          15 Mbps bandwidth, 10 ms latency, no packet loss.
 # These parameters might be adjusted based on further experiment settings.
-# Also notice that, some links (e.g. h1-s1 do not have packet loss so far)
 
 from mininet.net import Mininet
 from mininet.node import Controller, RemoteController, OVSController
