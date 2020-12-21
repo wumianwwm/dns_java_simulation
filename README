@@ -20,6 +20,7 @@ Copy all project code to a directory, e.g. 00_04_project_repo/
     onto floodlight VM's Desktop.
 
 Open another terminal, run following commands:
+        cd Desktop/00_04_project_repo
         sudo mn -c (password is "floodlight")
         make clean
         make
@@ -67,6 +68,12 @@ Notice for error:
     and h3(DNS Server) should be close to 130 - 140 ms. Sometimes, if the
     estimated RTT is much less than 100 ms, something goes wrong with mininet, we need
     to re-run the experiment, and discard the experimental results for that round.
+
+Interpret experiment results:
+192.127.112.31 - This is correct IP address, extracted from a packet from server.
+101.102.201.202 - This IP address comes from a packet from attacker.
+0.0.0.0 - Two packets received for one query, but client can't tell which one is valid.
+255.255.255.255 - Errors outside scope that client can handle happens.
 ************************************************************
 
 
