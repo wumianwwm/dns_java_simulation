@@ -1,8 +1,19 @@
 
 Last edit: 2020 Dec 21th 8:18 AM
+Last update: 2021 Sept 6th 4:03 PM, EDT
 
 These java files aim to provide simulation of a DNS client, a DNS server
 and an attacker that aims to cache poisoning the DNS client.
+
+---------------------------------------------------------------------------------
+-----------------------2021 September 6th update:--------------------------------
+
+This is a course project. So for those who wants to read more about the whole
+project setup, I update our final project report to git as well.
+
+-----------------------2021 September 6th update:--------------------------------
+---------------------------------------------------------------------------------
+
 
 ---------------------------------------------------------------------------------
 ------------- Guide and Experiment Setup: Simple_DNS_Client/Sever ---------------
